@@ -33,7 +33,7 @@ PYTHONPATH=src python -m bioreason 'example query' --input examples/papers.json
 PYTHONPATH=src python -m unittest discover -s tests -v
 ```
 
-The online command requires Europe PMC access. Offline fixtures and unit tests require no network. The repository currently has **96 offline tests**, including biomedical cross-topic regression tests, source/DOI checks, eight-role inference-adapter coverage, discussion chaining, and safe memory replay; GitHub Actions has executed the Python 3.10–3.13 test matrix successfully. Passing software tests does **not** establish scientific accuracy.
+The online command requires Europe PMC access. Offline fixtures and unit tests require no network. The repository currently has **100 offline tests**, including biomedical cross-topic regression tests, source/DOI checks, eight-role inference-adapter coverage, discussion chaining, and safe memory replay; GitHub Actions has executed the Python 3.10–3.13 test matrix successfully. Passing software tests does **not** establish scientific accuracy.
 
 Input: JSON array of objects with `title`, `id`, `source`, `doi`, optionally `year`. Output: JSON printed to stdout. Example records are synthetic.
 
@@ -164,7 +164,7 @@ verification script prevents changing the selected source without
 detecting tampering. This safeguard **does not** make council reasoning
 more accurate and **does not publish** any biomedical conclusion.
 
-[96 passing offline tests](https://github.com/AMMARICA1791/bioreason/actions/runs/40329408456)
+[100 passing offline tests](https://github.com/AMMARICA1791/bioreason/actions/runs/40331546234)
 on Python 3.10–3.13 include replay of the original Qwen failure
 and checks for non-regression and tampering.
 
@@ -189,6 +189,26 @@ accuracy or turn the final revision into a success.
 correction details and artifact links without deleting negative results.
 [The model-capability protocol](MODEL_CAPABILITY_PROTOCOL.md) preserves
 its outcome criteria and full initial/revised responses.
+
+## More precise citation integrity and reviewer accountability
+
+A concrete provenance hole has been closed: the evidence gate now rejects
+proposals that combine a legitimate DOI from **one** paper with a legitimate
+record ID from a **different** paper. It requires each supplied DOI to belong
+to a cited source identifier and still accepts correctly paired genuine
+citations. The correction is covered by regression tests using real Europe
+PMC identifiers `42380812` and `42802541`.
+
+Critic replies are also no longer considered a substantive source objection
+merely because they include generic negative wording about a paper. A
+missing-citation failure requires a source-related objection, and a
+DOI/record mismatch requires an identity-specific objection. This remains a
+**lexical review audit, not expert scientific validation**.
+
+[100 tests and ten synthetic scientific regressions passed](https://github.com/AMMARICA1791/bioreason/actions/runs/40331546234)
+on the four supported Python versions. Actual model dialogue still has
+not demonstrated that the council improves its Inventor questions after peer
+criticism; the best screened proposal is preserved for human review only.
 
 ## Evidence and provenance
 
