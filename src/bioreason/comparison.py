@@ -10,7 +10,7 @@ from .scientific_gate import assess_candidate
 MEASURABLE_ENDPOINT = re.compile(
     r"\b(?:sensitivity|specificity|recall|precision|false[\s-]?positive|"
     r"false[\s-]?negative|accuracy|auc|area under|f1[\s-]?score|"
-    r"detection rate|diagnostic yield|calibration|time to diagnosis)\b",
+    r"detection rates?|diagnostic yield|calibration|time to diagnosis)\b",
     re.IGNORECASE,
 )
 COMPARATOR = re.compile(
@@ -58,12 +58,50 @@ def compare_solo_to_council(solo, deliberation, papers):
     baseline = evaluate_candidate(solo, papers)
     first = evaluate_candidate(reviews[0]["response"], papers)
     last = evaluate_candidate(reviews[-1]["response"], papers)
+    # Never silently replace a better independently sourced solo lead with
+    # a worse council revision. This is an archival recommendation for HUMAN
+    # review only, not a scientific validation or automatic publication.
+    # If both arms fail evidence screening, produce no selected lead.
+    solo_ok = baseline["screen"]["decision"] == "tentative_only"
+    council_ok = last["screen"]["decision"] == "tentative_only"
+    council_strictly_better = (
+        council_ok and (
+            not solo_ok or last["proxy_score"] > baseline["proxy_score"]
+        )
+    )
+    winner = (
+        "council_last" if council_strictly_better
+        else "solo" if solo_ok
+        else "none"
+    )
+    chosen = last if winner == "council_last" else (
+        baseline if winner == "solo" else None
+    )
+    selection = {
+        "source": winner,
+        "candidate": chosen["candidate"] if chosen else None,
+        "proxy_score": chosen["proxy_score"] if chosen else None,
+        "status": (
+            "tentative_human_review_only" if chosen
+            else "no_candidate_supported_by_screen"
+        ),
+        "council_beats_solo_proxy": (
+            council_strictly_better and solo_ok
+        ),
+        "scientific_validation": False,
+        "rule": (
+            "Council replaces solo only with a tentative screened proposal "
+            "that strictly exceeds solo proxy score, or when solo is held. "
+            "Ties retain solo; if neither passes, return no candidate."
+        ),
+    }
     return {
         "arms": {
             "solo": baseline,
             "council_first": first,
             "council_last": last,
         },
+        "selection": selection,
         "outcomes": {
             "first_to_last_changed": (
                 reviews[0]["response"].strip() != reviews[-1]["response"].strip()
@@ -79,6 +117,7 @@ def compare_solo_to_council(solo, deliberation, papers):
         "validity_limits": [
             "The solo arm and council use the same model and papers, but different inference budgets.",
             "The mechanical proxy may reward formatting without scientific truth.",
+            "Selected candidate is only a tentative lead for human scientific review.",
             "A single live run cannot show generalizable learning or improvement.",
             "There is no blinded independent expert reference label.",
             "All claims remain unvalidated research leads; a tentative gate is not approval.",
