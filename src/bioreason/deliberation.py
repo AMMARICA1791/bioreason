@@ -9,7 +9,7 @@ import re
 from pathlib import Path
 
 from .council import Council, MODEL_ROLES, verify_chain
-from .scientific_gate import assess_candidate, is_valid_abstention
+from .scientific_gate import assess_candidate, is_valid_abstention, normalize_doi
 from .peer_review import make_review_obligations, assess_critic
 
 VERSION = 1
@@ -127,11 +127,11 @@ def _issue_codes(answer, papers, role, last_answer=None):
         ):
             issues.append("missing_source_anchor")
     dois = {
-        str(paper.get("doi", "")).strip().rstrip(".,;)").lower()
+        normalize_doi(paper.get("doi", ""))
         for paper in papers if paper.get("doi")
     }
     mentioned = re.findall(r"\b10\.\d{4,9}/[^\s<>\"]+", answer)
-    if any(doi.rstrip(".,;)").lower() not in dois for doi in mentioned):
+    if any(normalize_doi(doi) not in dois for doi in mentioned):
         issues.append("unknown_doi")
     if last_answer is not None and answer.strip() == last_answer.strip():
         issues.append("unchanged_revision")
