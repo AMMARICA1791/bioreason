@@ -209,6 +209,50 @@ class ComparisonTests(unittest.TestCase):
         self.assertEqual(report["selection"]["candidate"], solo)
         self.assertFalse(report["scientific_validation"])
 
+    def test_exact_hybrid_transcripts_after_bracket_doi_fix(self):
+        # Replay original unedited Inventor texts from workflow 40327497545.
+        # The previous gate falsely rejected a genuine bracket-wrapped DOI.
+        papers = [{
+            "id": "42380812", "source": "MED",
+            "doi": "10.1186/s12885-026-16427-y",
+            "title": "Artificial intelligence for cervical cancer screening "
+                     "and diagnosis using Pap smear images: a systematic review.",
+        }]
+        solo = (
+            "Question: How does the artificial intelligence (AI) algorithm "
+            "used in this study perform compared to traditional Pap smear "
+            "analysis in terms of detecting cervical cancer at its earliest "
+            "stages?\n\nSource ID: 42380812"
+        )
+        first = (
+            "Question: How does the artificial intelligence (AI) algorithm "
+            "described in [DOI: 10.1186/s12885-026-16427-y] perform compared "
+            "to traditional Pap smear analysis in terms of detecting cervical "
+            "cancer at its earliest stages?\n\nSource ID: 42380812"
+        )
+        revised = (
+            "How does the accuracy of the AI algorithm described in "
+            "[DOI: 10.1186/s12885-026-16427-y] compare to manual Pap smear "
+            "interpretation in identifying early-stage cervical cancer?"
+        )
+        report = compare_solo_to_council(solo, turns(first, revised), papers)
+        self.assertEqual(
+            [report["arms"][name]["proxy_score"] for name in
+             ("solo", "council_first", "council_last")],
+            [5, 5, 3],
+        )
+        self.assertEqual(
+            report["arms"]["council_first"]["screen"]["decision"],
+            "tentative_only",
+        )
+        self.assertEqual(
+            report["arms"]["council_last"]["screen"]["reason_codes"],
+            ["missing_record_citation"],
+        )
+        self.assertEqual(report["selection"]["source"], "solo")
+        self.assertTrue(report["outcomes"]["revision_lost_evidence_quality"])
+        self.assertFalse(report["scientific_validation"])
+
     def test_invalid_and_incomplete_inputs_refused(self):
         with self.assertRaises(TypeError):
             evaluate_candidate(None, PAPERS)
