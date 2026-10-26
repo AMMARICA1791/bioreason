@@ -91,6 +91,16 @@ def assess_candidate(candidate, records):
         reasons.append("unassessed_biomedical_topics")
     if "?" not in candidate:
         reasons.append("no_explicit_testable_question")
+    # A small model may copy a prompt template literally, including slots
+    # such as [specific method] or <baseline>. Never treat that as research.
+    if re.search(
+        r"\[(?:specific|measurable|baseline|exact|source|paper|one)"
+        r"[^\]\n]{0,90}\]|"
+        r"<(?:specific|measurable|baseline|exact|source|paper|one)"
+        r"[^>\n]{0,90}>",
+        candidate, re.IGNORECASE,
+    ):
+        reasons.append("unresolved_template_placeholders")
     # A catalogue question is not a falsifiable hypothesis, even with real IDs.
     if re.search(
         r"\b(?:what are some|what (?:are|is) the (?:applications|uses|benefits|roles)|"
