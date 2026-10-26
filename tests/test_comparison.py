@@ -62,6 +62,15 @@ class ComparisonTests(unittest.TestCase):
         self.assertFalse(report["checks"]["no_blocking_reason"])
         self.assertIn("unsupported_cross_topic_bridge", report["screen"]["reason_codes"])
 
+    def test_topic_exists_but_is_not_cited_cannot_get_grounding_point(self):
+        response = "Could cervical cancer detection sensitivity improve?"
+        evaluated = evaluate_candidate(response, PAPERS)
+        self.assertTrue(evaluated["checks"]["contains_question"])
+        self.assertFalse(evaluated["checks"]["source_identifier_present"])
+        self.assertFalse(evaluated["checks"]["direct_topic_evidence"])
+        self.assertFalse(evaluated["checks"]["no_blocking_reason"])
+        self.assertEqual(evaluated["screen"]["decision"], "hold_for_independent_review")
+
     def test_invalid_and_incomplete_inputs_refused(self):
         with self.assertRaises(TypeError):
             evaluate_candidate(None, PAPERS)
