@@ -1,5 +1,8 @@
 """Offline tests for the deterministic BioReason baseline."""
 import unittest
+import io
+import json
+from unittest.mock import patch
 from bioreason.core import coordinator, fetch
 
 
@@ -37,6 +40,24 @@ class CoreTests(unittest.TestCase):
         result = coordinator("protein", papers)
         self.assertEqual(result["validator"]["verified_findings"], 0)
         self.assertIn("unvalidated", result["inventor"]["status"])
+
+    def test_core_metadata_includes_sanitized_abstract(self):
+        payload = {"resultList": {"result": [{
+            "id": "PMC1",
+            "source": "PMC",
+            "title": "Cervical cancer imaging study",
+            "abstractText": "<p>We study cervical &amp; uterine cancer imaging.</p>",
+            "doi": "10.1000/genuine",
+        }]}}
+        with patch(
+            "bioreason.core.urllib.request.urlopen",
+            return_value=io.BytesIO(json.dumps(payload).encode("utf-8")),
+        ) as mock:
+            papers = fetch("cervical cancer", limit=1)
+        self.assertEqual(len(papers), 1)
+        self.assertIn("cervical & uterine", papers[0]["abstract"])
+        self.assertNotIn("<p>", papers[0]["abstract"])
+        self.assertIn("resultType=core", mock.call_args.args[0].full_url)
 
     def test_invalid_limit(self):
         with self.assertRaises(ValueError):
