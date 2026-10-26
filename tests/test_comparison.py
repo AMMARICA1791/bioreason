@@ -74,7 +74,7 @@ class ComparisonTests(unittest.TestCase):
     def test_detects_plural_detection_rates_in_real_model_question(self):
         response = (
             "What is the relationship between cervical cancer AI screening "
-            "and traditional methods, and how does this affect detection rates? "
+            "compared with traditional methods, and how does this affect detection rates? "
             "Source ID: PMC42"
         )
         score = evaluate_candidate(response, PAPERS)
