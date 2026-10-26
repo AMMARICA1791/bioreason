@@ -137,7 +137,7 @@ class DeliberationTests(unittest.TestCase):
         )
         self.assertIn(
             "unsupported_cross_topic_bridge",
-            result["memory_after"]["lessons"][-1]["code"],
+            [entry["code"] for entry in result["memory_after"]["lessons"]],
         )
         self.assertEqual(result["publication_gate"], "hold_for_independent_review")
         self.assertIsNone(result["final_tentative_candidate"])
