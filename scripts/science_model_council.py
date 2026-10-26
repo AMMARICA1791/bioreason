@@ -16,8 +16,8 @@ INVENTOR = "Qwen/Qwen2.5-1.5B-Instruct"
 OUTPUT = Path("artifacts/science-model-council.json")
 ROLE_TASKS = {
     "Scout": "Select promising scientific signals from DIFFERENT fields; cite real DOIs.",
-    "Analyst": "Identify one possible transfer of a method between disciplines, as a QUESTION only.",
-    "Inventor": "Propose ONE falsifiable cross-disciplinary research question: measurable metric, comparator, and two exact DOIs from different disciplines. A method transfer is NOT proved by the bibliography; if uncertain, abstain.",
+    "Analyst": "Compare evidence quality within each field first. Only suggest an inter-field connection if real studies motivate it.",
+    "Inventor": "Choose one coherent research field with real study metadata. Ask ONE specific, falsifiable experiment question with a measured outcome, comparator, and at least one exact DOI. Cross-field transfer is OPTIONAL and unproven; never force unrelated fields together. If no defensible experiment can be formulated, abstain.",
     "Critic": "Challenge unsupported connections and missing evidence. Explain why bibliographic metadata alone does not establish the proposed mechanism.",
     "Validator": "Check exact DOI matching and distinguish research question from validated scientific claim.",
     "Builder": "Suggest one small low-cost falsification experiment; not an accomplished experiment.",
@@ -27,19 +27,20 @@ ROLE_TASKS = {
 
 
 def select_review_candidate(solo, first, revised, papers):
-    """Retain only tentative questions anchored to TWO independent fields."""
+    """Retain source-grounded tentative questions, even if within one field."""
     cases = [(name, text, review_question(text, papers)) for name, text
              in (("solo", solo), ("council_initial", first),
                  ("council_revised", revised))]
     accepted = [case for case in cases
-                if case[2]["decision"] == "tentative_human_review_only"
-                and case[2]["cross_domain_sources"]]
+                if case[2]["decision"] == "tentative_human_review_only"]
     best = max(accepted, key=lambda case: (len(case[2]["recognized_dois"]),
                                           -cases.index(case))) if accepted else None
     return {
         "candidate": best[1] if best else None,
         "selected_from": best[0] if best else "none",
-        "status": "tentative_for_human_review" if best else "no_supported_cross_domain_lead",
+        "status": "tentative_for_human_review" if best else "no_source_grounded_lead",
+        "cited_domains": best[2]["cited_domains"] if best else [],
+        "cross_domain_evidence": bool(best and best[2]["cross_domain_sources"]),
         "scientific_validation": False,
         "novelty_checked": False,
         "scores_not_scientific_truth": True,
@@ -56,6 +57,20 @@ def main():
         {"domain": p["domain"], "title": p["title"],
          "doi": p["doi"], "abstract_excerpt": p["abstract"][:160]}
         for p in papers
+    ]
+    # Prefer a coherent, inspectable group with informative study excerpts.
+    # This does not assert the field is more scientifically promising.
+    focus_domain = max(
+        survey["domains"],
+        key=lambda domain: (
+            sum(min(len(p["abstract"]), 400) for p in survey["domains"][domain]),
+            domain,
+        ),
+    )
+    focus_sources = [
+        {"domain": p["domain"], "title": p["title"],
+         "doi": p["doi"], "abstract_excerpt": p["abstract"][:400]}
+        for p in survey["domains"][focus_domain]
     ]
     print("PASS: live multidisciplinary survey:", sorted(survey["domains"]),
           "records:", len(papers), flush=True)
@@ -87,6 +102,8 @@ def main():
             {"role": "user", "content": json.dumps({
                 "task": ROLE_TASKS[role],
                 "papers_by_domain": brief,
+                "priority_field_for_depth": focus_domain,
+                "priority_source_excerpts": focus_sources,
                 "previous_role_handoff": evidence,
                 "research_status": "tentative and unvalidated",
             }, ensure_ascii=False)[:6000]},
@@ -96,7 +113,8 @@ def main():
         inputs = tok(formatted, return_tensors="pt", return_attention_mask=True)
         with torch.no_grad():
             generation = model.generate(
-                **inputs, max_new_tokens=170, do_sample=False,
+                **inputs, max_new_tokens=210 if role == "Inventor" else 150,
+                do_sample=False,
                 pad_token_id=tok.eos_token_id,
             )
         answer = tok.decode(
@@ -113,7 +131,7 @@ def main():
     solo = infer("Inventor", {"context": "no peer outputs", "records": brief})
     with patch("bioreason.council.ask_model", side_effect=infer):
         council = run_council(
-            "Interdisciplinary method-transfer opportunities",
+            "Science-wide evidence-first experimental questions",
             papers, model_roles=MODEL_ROLES,
         )
     first = council["results"]["Inventor"]["model_suggestion"]["candidate"]
@@ -142,6 +160,8 @@ def main():
     report = {
         "generated_utc": datetime.now(timezone.utc).isoformat(),
         "source_mode": "crossref_live", "survey": survey,
+        "focus_domain_for_question": focus_domain,
+        "focus_sources": focus_sources,
         "model_calls": calls, "eight_role_chain": council["messages"],
         "revision_chain": revision_messages,
         "solo": {"response": solo["candidate"],
