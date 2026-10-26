@@ -33,7 +33,7 @@ PYTHONPATH=src python -m bioreason 'example query' --input examples/papers.json
 PYTHONPATH=src python -m unittest discover -s tests -v
 ```
 
-The online command requires Europe PMC access. Offline fixtures and unit tests require no network. The repository currently has **71 offline tests**, including biomedical cross-topic regression tests, source/DOI checks, eight-role inference-adapter coverage, discussion chaining, and safe memory replay; GitHub Actions has executed the Python 3.10–3.13 test matrix successfully. Passing software tests does **not** establish scientific accuracy.
+The online command requires Europe PMC access. Offline fixtures and unit tests require no network. The repository currently has **78 offline tests**, including biomedical cross-topic regression tests, source/DOI checks, eight-role inference-adapter coverage, discussion chaining, and safe memory replay; GitHub Actions has executed the Python 3.10–3.13 test matrix successfully. Passing software tests does **not** establish scientific accuracy.
 
 Input: JSON array of objects with `title`, `id`, `source`, `doi`, optionally `year`. Output: JSON printed to stdout. Example records are synthetic.
 
@@ -142,6 +142,31 @@ with **2/6** proxy points each and no scientific approval. We removed literal
 question templates from generation prompts and added a gate rule rejecting
 unresolved placeholders in outputs. This is backed by focused unit tests, not
 by a demonstrated live model improvement.
+
+## No-regression safeguard for human review leads
+
+An actual [Qwen experiment](https://github.com/AMMARICA1791/bioreason/actions/runs/40320610137)
+found the solo answer included a retrieved study identifier (`42380812`)
+but both council Inventor replies omitted it. The result was a **negative
+solo-versus-council comparison** (recorded 5/6 solo versus 2/6 council).
+After correcting endpoint detection to recognize plural `detection rates`,
+replaying the *same verbatim transcripts* gives **6/6 solo versus 3/6
+council**, preserving the negative **three-point difference**. Neither
+result establishes clinical accuracy; [full provenance and
+correction](RUN_EVIDENCE.md) are retained.
+
+A new conservative `solo_vs_council.selection` chooses the best
+*evidence-screened tentative research lead for human review only*: it
+retains solo if council fails the evidence gate or ties/underperforms,
+uses council only when it has a strictly better screened candidate,
+and returns no lead if both fail. The independent evidence
+verification script prevents changing the selected source without
+detecting tampering. This safeguard **does not** make council reasoning
+more accurate and **does not publish** any biomedical conclusion.
+
+[78 passing offline tests](https://github.com/AMMARICA1791/bioreason/actions/runs/40322627429)
+on Python 3.10–3.13 include replay of the original Qwen failure
+and checks for non-regression and tampering.
 
 ## Evidence and provenance
 
