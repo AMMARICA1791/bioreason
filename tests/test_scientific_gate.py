@@ -75,6 +75,13 @@ class ScientificGateTests(unittest.TestCase):
         self.assertIn("unassessed_biomedical_topics", result["reason_codes"])
         self.assertEqual(result["coverage"], "limited phrase-based screen, NOT a medical ontology")
 
+    def test_inventor_must_ask_an_actual_research_question(self):
+        result = assess_candidate(
+            "Cervical cancer deep learning is important. PMC13650561", PAPERS
+        )
+        self.assertEqual(result["decision"], "hold_for_independent_review")
+        self.assertIn("no_explicit_testable_question", result["reason_codes"])
+
     def test_fabricated_doi_blocks_candidate_despite_real_id(self):
         result = assess_candidate(
             "Can cervical cancer diagnosis improve? PMC13650561 DOI 10.9999/fiction",
