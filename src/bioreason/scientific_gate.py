@@ -83,6 +83,19 @@ def assess_candidate(candidate, records):
     ):
         reasons.append("citation_does_not_support_topics")
 
+    # DOI strings in a proposed claim must be present in the retrieved source
+    # metadata. They are not independent proof of the claim even when matched.
+    known_dois = {
+        str(p.get("doi", "")).strip().rstrip(".,;)").lower()
+        for p in records if p.get("doi")
+    }
+    mentioned_dois = [
+        match.rstrip(".,;)").lower()
+        for match in re.findall(r"\b10\.\d{4,9}/[^\s<>\"]+", candidate)
+    ]
+    if any(doi not in known_dois for doi in mentioned_dois):
+        reasons.append("doi_not_in_retrieved_records")
+
     reasons = sorted(set(reasons))
     return {
         "decision": "hold_for_independent_review" if reasons else "tentative_only",
