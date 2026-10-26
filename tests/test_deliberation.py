@@ -5,7 +5,7 @@ from pathlib import Path
 
 from bioreason.council import MODEL_ROLES, run_council, verify_chain
 from bioreason.deliberation import (
-    LESSON_GUIDANCE, discuss, load_memory, save_memory,
+    LESSON_GUIDANCE, _issue_codes, discuss, load_memory, save_memory,
 )
 
 PAPERS = [
@@ -26,6 +26,22 @@ class DeliberationTests(unittest.TestCase):
             "candidate": "Tentative proposal from " + role,
             "status": "unverified model-generated suggestion",
         }
+
+    def test_real_markdown_wrapped_doi_does_not_poison_memory(self):
+        papers = [
+            {"id": "42380812", "source": "MED",
+             "doi": "10.1186/s12885-026-16427-y",
+             "title": "Artificial intelligence for cervical cancer screening"}
+        ]
+        answer = (
+            "Could cervical cancer screening detection improve? "
+            "[DOI: 10.1186/s12885-026-16427-y] Source ID: 42380812"
+        )
+        issues = _issue_codes(answer, papers, "Inventor")
+        self.assertNotIn("unknown_doi", issues)
+        self.assertNotIn("missing_source_anchor", issues)
+        bogus = answer.replace("16427-y", "fake-id")
+        self.assertIn("unknown_doi", _issue_codes(bogus, papers, "Inventor"))
 
     def test_two_rounds_eight_roles_with_real_handoffs(self):
         result = discuss("protein", PAPERS, self.base, self.infer, rounds=2)
