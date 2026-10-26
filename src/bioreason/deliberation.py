@@ -9,7 +9,7 @@ import re
 from pathlib import Path
 
 from .council import Council, MODEL_ROLES, verify_chain
-from .scientific_gate import assess_candidate
+from .scientific_gate import assess_candidate, is_valid_abstention
 from .peer_review import make_review_obligations, assess_critic
 
 VERSION = 1
@@ -111,6 +111,10 @@ def save_memory(path, memory):
 
 def _issue_codes(answer, papers, role, last_answer=None):
     issues = []
+    # Abstention, when evidence is missing, is an appropriate outcome.
+    # Never train the council to fabricate citations just to avoid a warning.
+    if role == "Inventor" and is_valid_abstention(answer):
+        return issues
     ids = [str(paper["id"]) for paper in papers if paper.get("id")]
     if role in ANCHOR_ROLES and ids:
         if not any(
@@ -304,7 +308,9 @@ def discuss(query, papers, base_council, infer, memory=None, rounds=ROUNDS):
                 "role": role,
                 "response": answer,
                 "status": (
-                    "held_pending_evidence" if scientific_screen
+                    "abstained_insufficient_evidence" if scientific_screen
+                    and scientific_screen["decision"] == "abstained_insufficient_evidence"
+                    else "held_pending_evidence" if scientific_screen
                     and scientific_screen["decision"] == "hold_for_independent_review"
                     else "unverified model deliberation"
                 ),
@@ -344,6 +350,8 @@ def discuss(query, papers, base_council, infer, memory=None, rounds=ROUNDS):
         "publication_gate": (
             "tentative_review_only" if latest_proposal
             and latest_proposal["screen"]["decision"] == "tentative_only"
+            else "abstained_insufficient_evidence" if latest_proposal
+            and latest_proposal["screen"]["decision"] == "abstained_insufficient_evidence"
             else "hold_for_independent_review"
         ),
         "memory_before": before,
