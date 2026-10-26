@@ -141,6 +141,40 @@ class ComparisonTests(unittest.TestCase):
         self.assertEqual(result["selection"]["source"], "solo")
         self.assertEqual(result["outcomes"]["solo_to_last_proxy_delta"], 0)
 
+    def test_archived_real_qwen_failure_replays_as_solo_fallback(self):
+        # Literal transcripts from run 40320610137, not model simulations.
+        paper = [{
+            "id": "42380812", "source": "MED",
+            "title": "Artificial intelligence for cervical cancer screening "
+                     "and diagnosis using Pap smear images: a systematic review.",
+        }]
+        solo = (
+            "Question: What is the relationship between the use of artificial "
+            "intelligence in cervical cancer screening and diagnosis compared "
+            "to traditional methods, and how does this impact the detection "
+            "rates of cervical cancer? Source ID: 42380812"
+        )
+        first = (
+            "Question: What is the relationship between the use of artificial "
+            "intelligence in cervical cancer screening and diagnosis compared "
+            "to traditional methods, and how does this impact the detection "
+            "rates of cervical cancer?"
+        )
+        final = (
+            "What is the relationship between the use of artificial intelligence "
+            "(AI) in cervical cancer screening and diagnosis compared to "
+            "traditional methods, and how does this impact the detection "
+            "rates of cervical cancer?"
+        )
+        report = compare_solo_to_council(solo, turns(first, final), paper)
+        self.assertEqual(report["arms"]["solo"]["proxy_score"], 6)
+        self.assertEqual(report["arms"]["council_first"]["proxy_score"], 3)
+        self.assertEqual(report["arms"]["council_last"]["proxy_score"], 3)
+        self.assertEqual(report["outcomes"]["solo_to_last_proxy_delta"], -3)
+        self.assertEqual(report["selection"]["source"], "solo")
+        self.assertEqual(report["selection"]["candidate"], solo)
+        self.assertFalse(report["scientific_validation"])
+
     def test_invalid_and_incomplete_inputs_refused(self):
         with self.assertRaises(TypeError):
             evaluate_candidate(None, PAPERS)
