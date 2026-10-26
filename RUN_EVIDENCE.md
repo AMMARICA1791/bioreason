@@ -99,6 +99,17 @@ An abstention can be safer than a fabricated connection, but withholding two pro
 
 This **negative first measurement** cannot be treated as a general proof of council inferiority, just as an isolated positive score would not establish scientific usefulness. Neither the solo nor council generated independently validated scientific conclusions. The missing Critic-to-Inventor handoff was subsequently repaired in code and tested, but a later **real model experiment** is necessary to determine whether that correction improves outcomes.
 
+## Critic audit and observed template-copying regression (2026-10-26)
+
+- **Actual model:** [Run 40319089691](https://github.com/AMMARICA1791/bioreason/actions/runs/40319089691) succeeded with nine live focused Europe PMC papers, the same local Qwen/Qwen2.5-0.5B-Instruct, one solo turn, and 24 council turns.
+- **Observed outcome:** under the then-current rubric, the solo and council-first/final answers each scored **2/6**; the final proposal was held for independent review. No agent advantage or scientific improvement was demonstrated.
+- **Root cause documented from [unaltered artifact 12649165247](https://github.com/AMMARICA1791/bioreason/actions/runs/40319089691/artifacts/12649165247):** the small model copied the prompt template literally — for example `Could [specific method] improve [measurable endpoint] versus [baseline]?` — rather than supplying an actual research method or source ID.
+- **Revisions, not retroactive reinterpretation:** removed literal answer templates from the model's instructions. The evidence screen now separately blocks `unresolved_template_placeholders`; this error is also an allowlisted corrective lesson for later runs.
+- **Responsible uncertainty:** clear `ABSTAIN: insufficient evidence` outputs are now recorded as abstentions rather than penalized for missing research citations, while fake DOI claims hidden after `ABSTAIN` remain blocked.
+- **Verified deterministic tests:** [run 40320357391](https://github.com/AMMARICA1791/bioreason/actions/runs/40320357391) passed **71 offline tests** on Python 3.10–3.13 plus the ten existing synthetic research-gate cases.
+
+**Limitation:** the full local-model inference cycle using the *post-template* instructions is a distinct experiment. The code and tests prove that invalid copied templates are rejected; they do not establish whether a small model can reliably originate stronger source-grounded questions.
+
 ## Earlier independent proof
 
 The preceding [run 40258295368](https://github.com/AMMARICA1791/bioreason/actions/runs/40258295368) proved live retrieval of 10 Europe PMC records and actual model output for Analyst, Inventor, and Critic before the eight-role extension.
