@@ -10,6 +10,7 @@ from pathlib import Path
 
 from .council import Council, MODEL_ROLES, verify_chain
 from .scientific_gate import assess_candidate
+from .peer_review import make_review_obligations, assess_critic
 
 VERSION = 1
 ROUNDS = 2
@@ -44,6 +45,10 @@ LESSON_GUIDANCE = {
     "diffuse_evidence_citations": (
         "Do not append the entire bibliography as evidence. Use at most "
         "three directly relevant identifiers; state why each matters."
+    ),
+    "critic_failed_to_challenge": (
+        "The Critic must identify at least one specific failure exposed by "
+        "the evidence gate; paraphrasing the Inventor is not a review."
     ),
 }
 ROLE_TASKS = {
@@ -194,7 +199,13 @@ def discuss(query, papers, base_council, infer, memory=None, rounds=ROUNDS):
                     reverse=True,
                 )
                 record = ranked[0] if ranked else None
+                previous_obligations = make_review_obligations(latest_proposal["screen"])
                 revision_feedback = {
+                    "deterministic_review_challenges": previous_obligations["specific_challenges"],
+                    "critic_response_audit": (
+                        previous_critic.get("critic_response_audit")
+                        if previous_critic else None
+                    ),
                     "required_action": (
                         "Address the prior Critic objection and specific hold "
                         "reasons. Rewrite a falsifiable question with one exact "
@@ -222,7 +233,12 @@ def discuss(query, papers, base_council, infer, memory=None, rounds=ROUNDS):
                  "issue_codes": t["issue_codes"]}
                 for t in turns[-4:]
             ]
+            mandatory_critical_review = (
+                make_review_obligations(latest_proposal["screen"])
+                if role == "Critic" and latest_proposal else None
+            )
             evidence = {
+                "mandatory_critical_review": mandatory_critical_review,
                 "mandatory_revision_feedback": revision_feedback,
                 "query": query,
                 "round": round_number,
@@ -275,6 +291,13 @@ def discuss(query, papers, base_council, infer, memory=None, rounds=ROUNDS):
                 ):
                     if code in scientific_screen["reason_codes"] and code not in issues:
                         issues.append(code)
+            critic_response_audit = None
+            if role == "Critic" and mandatory_critical_review:
+                critic_response_audit = assess_critic(
+                    answer, mandatory_critical_review
+                )
+                if critic_response_audit["audit"] == "critic_failed_to_challenge":
+                    issues.append("critic_failed_to_challenge")
             _observe(memory, issues)
             turn = {
                 "round": round_number,
@@ -289,6 +312,11 @@ def discuss(query, papers, base_council, infer, memory=None, rounds=ROUNDS):
             }
             if scientific_screen is not None:
                 turn["scientific_screen"] = scientific_screen
+            if critic_response_audit is not None:
+                turn["critic_response_audit"] = critic_response_audit
+                # The deterministic objections are carried intact even when
+                # the LLM fails to formulate a rigorous scientific critique.
+                turn["review_obligations"] = mandatory_critical_review
             turns.append(turn)
             previous_by_role[role] = answer
             recipient = MODEL_ROLES[(idx + 1) % len(MODEL_ROLES)]
