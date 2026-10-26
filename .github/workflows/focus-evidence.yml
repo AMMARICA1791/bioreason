@@ -1,0 +1,55 @@
+name: BioReason focused-source verification
+
+on:
+  push:
+    paths:
+      - '.github/workflows/focus-evidence.yml'
+      - 'src/bioreason/focus.py'
+      - 'src/bioreason/core.py'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Verify Europe PMC focused topic without model inference
+        run: |
+          PYTHONPATH=src python - <<'PY'
+          import json
+          from pathlib import Path
+          from bioreason.core import fetch
+          from bioreason.focus import collect_focused_records, TOPIC
+          from bioreason.scientific_gate import _topics
+
+          query, papers = collect_focused_records(fetch)
+          assert len(papers) >= 3
+          assert all(TOPIC in _topics(p["title"] + " " + p.get("abstract", "")) for p in papers)
+          Path("artifacts").mkdir(exist_ok=True)
+          Path("artifacts/focus-evidence.json").write_text(json.dumps({
+              "source_mode": "europe_pmc_live",
+              "focus": TOPIC,
+              "query": query,
+              "record_count": len(papers),
+              "records": papers,
+              "not_scientifically_validated": True,
+          }, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+          print("PASS: focused live Europe PMC records:", len(papers), "subject:", TOPIC)
+          for paper in papers:
+              print("RECORD:", paper["id"], paper["title"][:140])
+          PY
+      - name: Archive retrieved bibliography
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: focused-europe-pmc-bibliography
+          path: artifacts/focus-evidence.json
+          if-no-files-found: warn
+          retention-days: 30
