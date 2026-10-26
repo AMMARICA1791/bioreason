@@ -1,0 +1,96 @@
+"""Conservative scientific-coherence and provenance screen for research leads.
+
+This is NOT a scientific fact checker or biomedical ontology. It detects a
+small, testable set of known biomedical topic phrases and requires a retrieved
+record supporting a proposed combination. Cross-topic novelty is not declared
+impossible; it is HELD pending evidence and independent scientific review.
+"""
+import re
+
+TOPIC_TERMS = {
+    "cervical cancer": (r"\bcervical (?:cancer|carcinoma|neoplas(?:ia|m))\b",),
+    "glaucoma": (r"\bglaucoma(?:tous)?\b",),
+    "breast cancer": (r"\bbreast (?:cancer|carcinoma|tumou?r)\b",),
+    "prostate cancer": (r"\bprostate (?:cancer|carcinoma|tumou?r)\b",),
+    "lung cancer": (r"\blung (?:cancer|carcinoma|tumou?r)\b",),
+    "diabetic retinopathy": (r"\bdiabetic retinopathy\b",),
+    "diabetes": (r"\bdiabet(?:es|ic)\b",),
+    "alzheimer disease": (r"\balzheimer'?s?(?: disease)?\b",),
+    "parkinson disease": (r"\bparkinson'?s?(?: disease)?\b",),
+    "kidney disease": (r"\b(?:kidney|renal) disease\b",),
+    "asthma": (r"\basthma(?:tic)?\b",),
+    "multiple sclerosis": (r"\bmultiple sclerosis\b",),
+    "protein folding": (r"\bprotein fold(?:ing|ed)?\b",),
+    "cystic fibrosis": (r"\bcystic fibrosis\b",),
+    "tuberculosis": (r"\btuberculosis\b",),
+    "malaria": (r"\bmalaria\b",),
+    "stroke": (r"\bstroke\b",),
+}
+
+
+def _topics(text):
+    return {
+        topic for topic, patterns in TOPIC_TERMS.items()
+        if any(re.search(pattern, text, flags=re.IGNORECASE)
+               for pattern in patterns)
+    }
+
+
+def assess_candidate(candidate, records):
+    """Return a blocking evidence gate, not a prediction of scientific truth.
+
+    A *tentative* decision only means that limited lexical checks passed; it
+    must never be interpreted as independently validated biomedical evidence.
+    """
+    if not isinstance(candidate, str):
+        raise TypeError("candidate must be text")
+    if not isinstance(records, list):
+        raise TypeError("records must be a list")
+    topics = sorted(_topics(candidate))
+    record_topics = {}
+    for paper in records:
+        identifier = str(paper.get("id", "")).strip()
+        if not identifier:
+            continue
+        context = (str(paper.get("title", "")) + " " +
+                   str(paper.get("abstract", "")))
+        record_topics[identifier] = _topics(context)
+    all_topics = set().union(*record_topics.values()) if record_topics else set()
+    missing = sorted(set(topics) - all_topics)
+    records_covering_all = sorted(
+        rid for rid, present in record_topics.items()
+        if topics and set(topics).issubset(present)
+    )
+
+    reasons = []
+    if not topics:
+        reasons.append("unassessed_biomedical_topics")
+    if missing:
+        reasons.append("topic_not_supported_by_retrieved_records")
+    if len(topics) >= 2 and not records_covering_all:
+        reasons.append("unsupported_cross_topic_bridge")
+
+    # Explicitly prevent fake bibliography references from satisfying
+    # provenance. An ID must be present in supplied records.
+    cited_ids = sorted(
+        rid for rid in record_topics
+        if re.search(r"(?<!\w)" + re.escape(rid) + r"(?!\w)", candidate)
+    )
+    if topics and not cited_ids:
+        reasons.append("missing_record_citation")
+    if topics and cited_ids and not any(
+        set(topics).issubset(record_topics[rid]) for rid in cited_ids
+    ):
+        reasons.append("citation_does_not_support_topics")
+
+    reasons = sorted(set(reasons))
+    return {
+        "decision": "hold_for_independent_review" if reasons else "tentative_only",
+        "reason_codes": reasons,
+        "recognized_topics": topics,
+        "topics_not_in_sources": missing,
+        "record_ids_covering_all_topics": records_covering_all,
+        "cited_record_ids": cited_ids,
+        "coverage": "limited phrase-based screen, NOT a medical ontology",
+        "scientific_validation": False,
+    }
