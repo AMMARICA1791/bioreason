@@ -40,6 +40,7 @@ def build_evidence():
         "council": base,
         "deliberation": discussion,
         "solo_vs_council": comparison,
+        "selected_for_independent_human_review": comparison["selection"],
     }
 
 
@@ -81,6 +82,13 @@ class EvaluationVerificationTests(unittest.TestCase):
             "Could cervical cancer sensitivity improve versus control? PMC10"
         )
         with self.assertRaisesRegex(ValueError, "does not match"):
+            check_run(bad)
+
+    def test_selected_lead_cannot_be_falsified(self):
+        d = build_evidence()
+        bad = copy.deepcopy(d)
+        bad["selected_for_independent_human_review"]["source"] = "council_last"
+        with self.assertRaisesRegex(ValueError, "Review lead selection"):
             check_run(bad)
 
     def test_changed_model_call_count_is_rejected(self):
