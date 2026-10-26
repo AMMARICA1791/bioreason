@@ -150,6 +150,20 @@ def assess_candidate(candidate, records):
     ]
     if any(doi not in known_dois for doi in mentioned_dois):
         reasons.append("doi_not_in_retrieved_records")
+    # A DOI from paper B is NOT a citation to paper A. When the proposal
+    # supplies both an ID and a DOI, they must describe the same retrieved
+    # bibliographic record (or identify multiple corresponding records).
+    # This is a metadata consistency check, not evidence of scientific truth.
+    dois_for_cited_ids = {
+        normalize_doi(p.get("doi", ""))
+        for p in records
+        if str(p.get("id", "")).strip() in cited_ids and p.get("doi")
+    }
+    if cited_ids and any(
+        doi in known_dois and doi not in dois_for_cited_ids
+        for doi in mentioned_dois
+    ):
+        reasons.append("doi_record_id_mismatch")
 
     reasons = sorted(set(reasons))
     return {
