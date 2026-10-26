@@ -51,6 +51,26 @@ class EvaluationVerificationTests(unittest.TestCase):
         self.assertEqual(report["actual_model_calls"], 25)
         self.assertFalse(report["scientific_improvement_demonstrated"])
         self.assertFalse(report["proxy_improvement_observed_in_one_run"])
+        self.assertEqual(report["critic_turns"], 2)
+        self.assertEqual(report["critic_unaudited_turns"], 0)
+        self.assertEqual(report["critic_failed_challenge"], 2)
+
+    def test_missing_critique_audit_reported_not_claimed_success(self):
+        d = build_evidence()
+        for turn in d["deliberation"]["turns"]:
+            if turn["role"] == "Critic":
+                turn.pop("critic_response_audit", None)
+        # Altering the archived turn also requires a new hash chain; so test
+        # unaudited metrics through a fresh valid trace, never bypass integrity.
+        from bioreason.council import Council
+        trace = Council()
+        for turn in d["deliberation"]["turns"]:
+            trace.send(turn["role"], MODEL_ROLES[(MODEL_ROLES.index(turn["role"])+1) % 8],
+                       "debate_reply", turn)
+        d["deliberation"]["messages"] = [message.__dict__ for message in trace.messages]
+        result = check_run(d)
+        self.assertEqual(result["critic_unaudited_turns"], 2)
+        self.assertEqual(result["critic_explicit_objections"], 0)
 
     def test_changed_candidate_cannot_hide_tampering(self):
         d = build_evidence()
