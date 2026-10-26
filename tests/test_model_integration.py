@@ -12,6 +12,8 @@ class IntegrationTests(unittest.TestCase):
         self.assertEqual([c.args[0] for c in mock.call_args_list], ["Analyst", "Inventor", "Critic"])
         self.assertTrue(verify_chain(result["messages"]))
         self.assertEqual(result["results"]["Validator"]["verified_findings"], 0)
+        self.assertEqual(set(result["results"]["Builder"]["model_candidates"]), {"Analyst", "Inventor", "Critic"})
+        self.assertEqual(result["results"]["Builder"]["model_candidates"]["Inventor"]["status"], "unverified")
 
     @patch("bioreason.council.ask_model")
     def test_offline_default(self, mock):
