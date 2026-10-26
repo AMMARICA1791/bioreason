@@ -61,6 +61,37 @@ class PeerReviewTests(unittest.TestCase):
             "critic_failed_to_challenge",
         )
 
+    def test_generic_negative_opinion_about_a_paper_is_not_source_review(self):
+        duties = make_review_obligations({
+            "decision": "hold_for_independent_review",
+            "reason_codes": ["missing_record_citation"],
+        })
+        result = assess_critic(
+            "This paper looks interesting but it is not very persuasive.",
+            duties,
+        )
+        self.assertEqual(result["audit"], "critic_failed_to_challenge")
+        self.assertTrue(result["missing_source_challenge"])
+
+    def test_doi_id_mismatch_requires_its_own_specific_objection(self):
+        duties = make_review_obligations({
+            "decision": "hold_for_independent_review",
+            "reason_codes": ["doi_record_id_mismatch"],
+        })
+        self.assertTrue(duties["must_request_direct_source_support"])
+        vague = assess_critic(
+            "The proposal is BLOCKED because its paper source should be checked.",
+            duties,
+        )
+        self.assertEqual(vague["audit"], "critic_failed_to_challenge")
+        exact = assess_critic(
+            "BLOCKED: the cited DOI belongs to a different source record "
+            "from the stated study ID, so these references do not match.",
+            duties,
+        )
+        self.assertEqual(exact["audit"], "challenge_explicit")
+        self.assertFalse(exact["scientific_validation"])
+
     def test_tentative_candidate_cannot_gain_scientific_validation(self):
         duties = make_review_obligations({
             "decision": "tentative_only", "reason_codes": [],
