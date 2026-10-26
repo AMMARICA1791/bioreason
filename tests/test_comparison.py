@@ -71,6 +71,76 @@ class ComparisonTests(unittest.TestCase):
         self.assertFalse(evaluated["checks"]["no_blocking_reason"])
         self.assertEqual(evaluated["screen"]["decision"], "hold_for_independent_review")
 
+    def test_detects_plural_detection_rates_in_real_model_question(self):
+        response = (
+            "What is the relationship between cervical cancer AI screening "
+            "and traditional methods, and how does this affect detection rates? "
+            "Source ID: PMC42"
+        )
+        score = evaluate_candidate(response, PAPERS)
+        self.assertTrue(score["checks"]["measurable_endpoint_mentioned"])
+        self.assertEqual(score["proxy_score"], 6)
+
+    def test_keeps_grounded_solo_when_council_loses_citation(self):
+        solo = (
+            "Could cervical cancer screening detection rates improve compared "
+            "with traditional practice? Source: PMC42"
+        )
+        ungrounded = (
+            "Could cervical cancer screening detection rates improve compared "
+            "with traditional practice?"
+        )
+        report = compare_solo_to_council(
+            solo, turns(ungrounded, ungrounded), PAPERS
+        )
+        self.assertEqual(report["selection"]["source"], "solo")
+        self.assertEqual(report["selection"]["candidate"], solo)
+        self.assertEqual(
+            report["selection"]["status"], "tentative_human_review_only"
+        )
+        self.assertFalse(report["selection"]["scientific_validation"])
+        self.assertLess(report["outcomes"]["solo_to_last_proxy_delta"], 0)
+
+    def test_promotes_council_only_with_strict_screened_improvement(self):
+        weak_solo = (
+            "Could cervical cancer screening improve? PMC42"
+        )
+        better = (
+            "Could cervical cancer screening specificity improve compared "
+            "with traditional methods? PMC42"
+        )
+        result = compare_solo_to_council(
+            weak_solo, turns(weak_solo, better), PAPERS
+        )
+        self.assertEqual(result["selection"]["source"], "council_last")
+        self.assertEqual(result["selection"]["candidate"], better)
+        self.assertTrue(result["selection"]["council_beats_solo_proxy"])
+        self.assertFalse(result["scientific_validation"])
+
+    def test_never_selects_unsupported_interdisciplinary_claim(self):
+        invalid = (
+            "Could cervical cancer screening accuracy improve through "
+            "glaucoma retinal photos? PMC42 PMC43"
+        )
+        result = compare_solo_to_council(
+            invalid, turns(invalid, invalid), PAPERS
+        )
+        self.assertEqual(result["selection"]["source"], "none")
+        self.assertIsNone(result["selection"]["candidate"])
+        self.assertEqual(
+            result["selection"]["status"],
+            "no_candidate_supported_by_screen",
+        )
+
+    def test_equal_tentative_quality_prefers_solo(self):
+        solo = "Could cervical cancer sensitivity improve versus control? PMC42"
+        council = "Can cervical cancer sensitivity improve versus control? PMC42"
+        result = compare_solo_to_council(
+            solo, turns(council, council), PAPERS
+        )
+        self.assertEqual(result["selection"]["source"], "solo")
+        self.assertEqual(result["outcomes"]["solo_to_last_proxy_delta"], 0)
+
     def test_invalid_and_incomplete_inputs_refused(self):
         with self.assertRaises(TypeError):
             evaluate_candidate(None, PAPERS)
