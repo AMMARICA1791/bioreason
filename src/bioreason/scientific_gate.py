@@ -67,6 +67,13 @@ def assess_candidate(candidate, records):
         reasons.append("unassessed_biomedical_topics")
     if "?" not in candidate:
         reasons.append("no_explicit_testable_question")
+    # A catalogue question is not a falsifiable hypothesis, even with real IDs.
+    if re.search(
+        r"\\b(?:what are some|what (?:are|is) the (?:applications|uses|benefits|roles)|"
+        r"list (?:some|the)|give examples of|overview of)\\b",
+        candidate, re.IGNORECASE,
+    ):
+        reasons.append("non_falsifiable_catalogue_question")
     if missing:
         reasons.append("topic_not_supported_by_retrieved_records")
     if len(topics) >= 2 and not records_covering_all:
@@ -80,6 +87,8 @@ def assess_candidate(candidate, records):
     )
     if topics and not cited_ids:
         reasons.append("missing_record_citation")
+    if len(cited_ids) > 3:
+        reasons.append("diffuse_evidence_citations")
     if topics and cited_ids and not any(
         set(topics).issubset(record_topics[rid]) for rid in cited_ids
     ):
