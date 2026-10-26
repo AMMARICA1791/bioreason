@@ -103,6 +103,7 @@ class DeliberationTests(unittest.TestCase):
                 "no_explicit_testable_question",
                 "non_falsifiable_catalogue_question",
                 "diffuse_evidence_citations",
+                "critic_failed_to_challenge",
             })
 
     def test_incoherent_bridge_blocked_and_critic_informed(self):
@@ -235,7 +236,48 @@ class DeliberationTests(unittest.TestCase):
             for record in output["candidate_reviews"]
         ))
 
+    def test_shallow_critic_is_flagged_and_a_real_objection_is_delivered(self):
+        papers = [
+            {"title": "Cervical cancer imaging and screening",
+             "id": "PMC1", "source": "PMC"},
+        ]
+        council = run_council("cervical cancer", papers)
+        inputs = {}
+
+        def infer(role, evidence):
+            inputs.setdefault((evidence["round"], role), evidence)
+            if role == "Inventor":
+                return {
+                    "role": role,
+                    "candidate": "Could cervical cancer screening accuracy improve?",
+                }
+            if role == "Critic":
+                return {
+                    "role": role,
+                    "candidate": "Could cervical cancer screening accuracy improve?",
+                }
+            return {"role": role, "candidate": "Findings remain unverified."}
+
+        outcome = discuss("cervical cancer", papers, council, infer, rounds=2)
+        first_critic = outcome["turns"][3]
+        self.assertEqual(
+            first_critic["critic_response_audit"]["audit"],
+            "critic_failed_to_challenge",
+        )
+        self.assertIn("critic_failed_to_challenge", first_critic["issue_codes"])
+        duties = inputs[(1, "Critic")]["mandatory_critical_review"]
+        self.assertIn("missing_record_citation", duties["reason_codes"])
+        feedback = inputs[(2, "Inventor")]["mandatory_revision_feedback"]
+        self.assertIn("source ID", feedback["deterministic_review_challenges"][0])
+        self.assertEqual(
+            feedback["critic_response_audit"]["audit"],
+            "critic_failed_to_challenge",
+        )
+        self.assertTrue(verify_chain(outcome["messages"]))
+        self.assertEqual(outcome["publication_gate"], "hold_for_independent_review")
+
     def test_bad_council_and_invalid_rounds_rejected(self):
+
         broken = dict(self.base, audit_passed=False)
         with self.assertRaises(ValueError):
             discuss("protein", PAPERS, broken, self.infer)
