@@ -100,6 +100,7 @@ class DeliberationTests(unittest.TestCase):
                 "missing_source_anchor", "unknown_doi", "unchanged_revision",
                 "unsupported_cross_topic_bridge",
                 "topic_not_supported_by_retrieved_records",
+                "no_explicit_testable_question",
             })
 
     def test_incoherent_bridge_blocked_and_critic_informed(self):
