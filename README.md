@@ -21,7 +21,7 @@ Biomedical literature is dispersed across publications and databases. BioReason 
 | Auditor | Records that limitations were reported |
 | Coordinator | Combines results into JSON |
 
-**Architecture disclosure:** These are deterministic Python functions and status fields, **not eight independently reasoning AI agents**. No autonomous collaboration, self-learning, experimentation, or scientific verification is implemented.
+**Architecture disclosure:** The default CLI now executes eight bounded, deterministic software-agent roles with explicit, hash-linked message handoffs, an audit result, and tamper-detection tests. **These are not independently reasoning LLM agents**. No autonomous self-learning, experimentation, continuous background execution, or scientific verification is implemented.
 
 ## Run
 
@@ -33,7 +33,7 @@ PYTHONPATH=src python -m bioreason 'example query' --input examples/papers.json
 PYTHONPATH=src python -m unittest discover -s tests -v
 ```
 
-The online command requires Europe PMC access. Offline fixtures and unit tests require no network. The repository defines **six offline unit tests**. A prior local prototype passed five tests; the published six-test suite has not yet been independently verified in GitHub Actions. Passing software tests would not establish scientific accuracy.
+The online command requires Europe PMC access. Offline fixtures and unit tests require no network. The repository defines **eleven offline unit tests**. A prior local prototype passed five tests; the published six-test suite has not yet been independently verified in GitHub Actions. Passing software tests would not establish scientific accuracy.
 
 Input: JSON array of objects with `title`, `id`, `source`, `doi`, optionally `year`. Output: JSON printed to stdout. Example records are synthetic.
 
@@ -74,9 +74,9 @@ These are background references, **not BioReason experimental results**. Bibliog
 
 ## Status and governance
 
-**Implemented:** Europe PMC metadata retrieval, offline JSON input, deterministic role pipeline, unit tests.
+**Implemented:** Europe PMC metadata retrieval, offline JSON input, executable deterministic eight-role council, hash-linked message trace, audit checks, unit tests.
 
-**Not implemented:** autonomous LLM agents, cross-paper scientific synthesis, live monitoring, full-text verification, hosted service, billing.
+**Not implemented:** autonomous LLM agents, cross-paper scientific synthesis, live monitoring, full-text verification, hosted service, billing. The `--legacy` CLI flag retains the original flat pipeline.
 
 Research use only. Do not use generated questions for diagnosis, treatment, laboratory safety, or claims of novelty. Contributions should include reproducible cases, citations, and counterexamples.
 
