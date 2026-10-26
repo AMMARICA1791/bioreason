@@ -174,7 +174,7 @@ def review_question(text, records):
         issues.append("unknown_doi")
     if len(cited) > 3:
         issues.append("diffuse_citations")
-    if re.search(r"\[(?:method|source|discipline|baseline|doi)\b", text, re.I):
+    if re.search(r"\[(?:method|discipline|baseline|source id|exact doi|doi here)\s*\]", text, re.I):
         issues.append("copied_template")
     # A source from two fields is needed to label a cross-domain question.
     # It is NOT proof that a transfer mechanism exists.
