@@ -33,6 +33,10 @@ LESSON_GUIDANCE = {
         "Do not introduce a biomedical disease or mechanism absent from the "
         "retrieved records without flagging the missing evidence."
     ),
+    "no_explicit_testable_question": (
+        "Inventor must produce one concrete, interrogative research question "
+        "with an exact retrieved record ID, or abstain explicitly."
+    ),
 }
 ROLE_TASKS = {
     "Scout": "Identify the strongest traceable records and missing coverage.",
@@ -206,6 +210,7 @@ def discuss(query, papers, base_council, infer, memory=None, rounds=ROUNDS):
                 for code in (
                     "unsupported_cross_topic_bridge",
                     "topic_not_supported_by_retrieved_records",
+                    "no_explicit_testable_question",
                 ):
                     if code in scientific_screen["reason_codes"] and code not in issues:
                         issues.append(code)
