@@ -179,7 +179,7 @@ def main():
         "generation": {
             "do_sample": False,
             "max_new_tokens": GENERATION_LIMIT,
-            "four_cpu_threads_max": True,
+            "cpu_threads": 2,
         },
         "cases": len(cases),
         "model_generations": 2 * len(cases) * len(MODELS),
