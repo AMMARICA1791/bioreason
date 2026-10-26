@@ -4,7 +4,6 @@ Roles are software agents with isolated handlers and shared immutable messages.
 They are not independently hosted LLMs.
 """
 from dataclasses import dataclass, asdict
-from datetime import datetime, timezone
 from hashlib import sha256
 import json
 from .core import scout, analyst, inventor, critic, validator
@@ -81,6 +80,11 @@ class Council:
             "status": "candidate report assembled",
             "candidate_question": self.results["Inventor"]["candidate_question"],
             "limitations": self.results["Critic"]["limitations"],
+            "model_candidates": {
+                role: self.results[role]["model_suggestion"]
+                for role in ("Analyst", "Inventor", "Critic")
+                if "model_suggestion" in self.results[role]
+            },
         }
         self.send("Builder", "Auditor", "report", self.results["Builder"])
 
