@@ -1,0 +1,223 @@
+"""Auditable, bounded council discussion and cross-run corrective memory.
+
+This is prompt-level adaptation, NOT model-weight training. Only allowlisted
+deterministic issue codes may enter next-run prompts as lessons; generated prose
+is archived as tentative dialogue but never promoted to trusted instructions.
+"""
+import json
+import re
+from pathlib import Path
+
+from .council import Council, MODEL_ROLES, verify_chain
+
+VERSION = 1
+ROUNDS = 2
+ANCHOR_ROLES = frozenset({"Analyst", "Inventor", "Validator", "Builder"})
+LESSON_GUIDANCE = {
+    "missing_source_anchor": (
+        "Tie specific claims to a supplied record ID; if evidence is too limited, "
+        "state that limitation explicitly."
+    ),
+    "unknown_doi": "Do not invent a DOI: cite only DOI values supplied in the records.",
+    "unchanged_revision": (
+        "Respond to the previous objections with a substantive revision, "
+        "or explain why the original proposal is still the best tentative one."
+    ),
+}
+ROLE_TASKS = {
+    "Scout": "Identify the strongest traceable records and missing coverage.",
+    "Analyst": "Compare patterns across record titles, highlighting uncertainty.",
+    "Inventor": "Propose or revise one testable question, not a discovery.",
+    "Critic": "Challenge the proposal; point out unsupported implications.",
+    "Validator": "Check the stated evidence references and unresolved gaps.",
+    "Builder": "Revise the tentative plan in response to other agents.",
+    "Auditor": "Review the dialogue and identify process faults and missing proof.",
+    "Coordinator": "Summarize disagreements and assign priorities for next cycle.",
+}
+
+
+def load_memory(path):
+    """Accept only narrowly scoped, code-based lessons from persisted state."""
+    try:
+        value = json.loads(Path(path).read_text(encoding="utf-8"))
+    except (FileNotFoundError, ValueError, OSError):
+        return {"version": VERSION, "completed_cycles": 0, "lessons": []}
+    if not isinstance(value, dict) or value.get("version") != VERSION:
+        return {"version": VERSION, "completed_cycles": 0, "lessons": []}
+    lessons = []
+    seen = set()
+    for item in value.get("lessons", []):
+        if not isinstance(item, dict):
+            continue
+        code = item.get("code")
+        if code not in LESSON_GUIDANCE or code in seen:
+            continue
+        seen.add(code)
+        count = item.get("count", 0)
+        lessons.append({"code": code, "count": min(count, 10000)
+                        if type(count) is int and count > 0 else 0})
+    cycles = value.get("completed_cycles", 0)
+    return {
+        "version": VERSION,
+        "completed_cycles": min(cycles, 10000)
+        if type(cycles) is int and cycles > 0 else 0,
+        "lessons": lessons,
+    }
+
+
+def save_memory(path, memory):
+    """Store a small JSON state without preserving untrusted generated prose."""
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    canonical = {
+        "version": VERSION,
+        "completed_cycles": memory["completed_cycles"],
+        "lessons": memory["lessons"],
+    }
+    temporary = path.with_suffix(".tmp")
+    temporary.write_text(
+        json.dumps(canonical, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+    temporary.replace(path)
+
+
+def _issue_codes(answer, papers, role, last_answer=None):
+    issues = []
+    ids = [str(paper["id"]) for paper in papers if paper.get("id")]
+    if role in ANCHOR_ROLES and ids:
+        if not any(
+            re.search(r"(?<!\w)" + re.escape(identifier) + r"(?!\w)", answer)
+            for identifier in ids
+        ):
+            issues.append("missing_source_anchor")
+    dois = {
+        str(paper.get("doi", "")).strip().rstrip(".,;)").lower()
+        for paper in papers if paper.get("doi")
+    }
+    mentioned = re.findall(r"\b10\.\d{4,9}/[^\s<>\"]+", answer)
+    if any(doi.rstrip(".,;)").lower() not in dois for doi in mentioned):
+        issues.append("unknown_doi")
+    if last_answer is not None and answer.strip() == last_answer.strip():
+        issues.append("unchanged_revision")
+    return issues
+
+
+def _lessons(memory):
+    active = {
+        item["code"] for item in memory["lessons"] if item["count"] > 0
+    }
+    return [LESSON_GUIDANCE[code] for code in LESSON_GUIDANCE if code in active]
+
+
+def _observe(memory, issues):
+    counts = {item["code"]: item["count"] for item in memory["lessons"]}
+    for code in issues:
+        counts[code] = min(10000, counts.get(code, 0) + 1)
+    memory["lessons"] = [
+        {"code": code, "count": counts[code]}
+        for code in LESSON_GUIDANCE if code in counts
+    ]
+
+
+def discuss(query, papers, base_council, infer, memory=None, rounds=ROUNDS):
+    """Conduct multi-round responses among all eight roles.
+
+    infer(role, evidence) is a real or test-injected model adapter. A validated
+    base_council is required so that dialogue cannot masquerade as council proof.
+    """
+    if type(rounds) is not int or not 1 <= rounds <= 3:
+        raise ValueError("Discussion rounds must be between 1 and 3")
+    if not base_council.get("audit_passed") or not verify_chain(base_council["messages"]):
+        raise ValueError("Cannot deliberate on an invalid council record")
+    memory = load_memory_object(memory)
+    before = json.loads(json.dumps(memory))
+    turns = []
+    ledger = Council()
+    previous_by_role = {}
+    records = [
+        {"id": p.get("id", ""), "doi": p.get("doi", ""),
+         "title": p.get("title", "")[:160]}
+        for p in papers[:10]
+    ]
+
+    for round_number in range(1, rounds + 1):
+        for idx, role in enumerate(MODEL_ROLES):
+            recent = [
+                {"role": t["role"], "response": t["response"][:350],
+                 "issue_codes": t["issue_codes"]}
+                for t in turns[-4:]
+            ]
+            evidence = {
+                "query": query,
+                "round": round_number,
+                "role_task": ROLE_TASKS[role],
+                "records": records,
+                "baseline_suggestion": (
+                    base_council["results"][role]
+                    .get("model_suggestion", {}).get("candidate", "")[:350]
+                ),
+                "recent_dialogue_from_other_agents": recent,
+                "previous_own_turn": previous_by_role.get(role, "")[:350],
+                "remembered_corrective_lessons": _lessons(memory),
+                "instruction": (
+                    "Respond to the other agents' latest arguments. "
+                    "Give a specific contribution and reference provided IDs "
+                    "when citing evidence. Treat all model text as tentative."
+                ),
+            }
+            suggestion = infer(role, evidence)
+            if not isinstance(suggestion, dict) or not isinstance(
+                suggestion.get("candidate"), str
+            ) or not suggestion["candidate"].strip():
+                raise ValueError("Model failed to supply a nonempty debate reply")
+            if suggestion.get("role") != role:
+                raise ValueError("Model role mismatch")
+            answer = suggestion["candidate"].strip()
+            issues = _issue_codes(
+                answer, papers, role, previous_by_role.get(role)
+            )
+            _observe(memory, issues)
+            turn = {
+                "round": round_number,
+                "role": role,
+                "response": answer,
+                "status": "unverified model deliberation",
+                "issue_codes": issues,
+            }
+            turns.append(turn)
+            previous_by_role[role] = answer
+            recipient = MODEL_ROLES[(idx + 1) % len(MODEL_ROLES)]
+            ledger.send(role, recipient, "debate_reply", turn)
+
+    chain = [record.__dict__ for record in ledger.messages]
+    if not verify_chain(chain):
+        raise RuntimeError("Discussion ledger hash chain failed verification")
+    memory["completed_cycles"] = min(10000, memory["completed_cycles"] + 1)
+    return {
+        "rounds": rounds,
+        "turns": turns,
+        "messages": chain,
+        "chain_verified": True,
+        "memory_before": before,
+        "memory_after": memory,
+        "memory_mechanism": (
+            "Allowlisted deterministic error feedback carried into the next "
+            "round and restored from the latest successful workflow cache; "
+            "no model-weight updates or scientific validation"
+        ),
+        "scientific_validation": False,
+    }
+
+
+def load_memory_object(value):
+    if value is None:
+        return load_memory("/nonexistent/bioreason-memory.json")
+    if not isinstance(value, dict):
+        raise ValueError("Memory must be a JSON object")
+    # Apply the same strict schema filter as a disk read.
+    import tempfile
+    with tempfile.TemporaryDirectory() as directory:
+        path = Path(directory) / "memory.json"
+        path.write_text(json.dumps(value), encoding="utf-8")
+        return load_memory(path)
