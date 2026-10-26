@@ -5,7 +5,12 @@ on:
     paths:
       - '.github/workflows/model-council.yml'
       - 'scripts/model_council.py'
+      - 'scripts/evaluate_run.py'
       - 'src/bioreason/**'
+      - 'tests/test_scientific_gate.py'
+      - 'tests/test_deliberation.py'
+      - 'tests/test_peer_review.py'
+      - 'tests/test_evaluation_verification.py'
   workflow_dispatch:
   schedule:
     - cron: '47 */6 * * *'
