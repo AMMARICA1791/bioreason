@@ -22,7 +22,7 @@ formatting tests. This is no longer the active research mission.
   role, plus a solo Inventor and a revision. It **produced no accepted
   hypothesis**. The first Inventor abstained and the revision tried to
   combine sodium-ion electrochemical behavior and microfluidic biosensors
-  without supporting evidence, with a truncated/fabricated DOI; the gate
+  without supporting evidence, with a truncated DOI; the gate
   correctly held it.
 - **No forced interdisciplinary claim:** after removing the requirement to
   combine unrelated fields, [run 40342083264](https://github.com/AMMARICA1791/bioreason/actions/runs/40342083264)
@@ -30,7 +30,7 @@ formatting tests. This is no longer the active research mission.
   **abstained before and after critique**. No source-grounded question was
   selected. The difference is that a responsible abstention is now
   explicitly recorded rather than mislabelled an accepted research result.
-- **Prior-art checks:** [dated note](research/PRIOR_ART_SANITY_2026-10-26.md)
+- **Prior-art checks:** [dated note](PRIOR_ART_SANITY_2026-10-26.md)
   documents existing 2025–2026 research linking perovskite devices and
   neuromorphic computing, and studies on battery optical sensing. Those
   generic bridges cannot be advertised as new discoveries.
