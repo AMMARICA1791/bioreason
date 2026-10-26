@@ -104,6 +104,7 @@ class DeliberationTests(unittest.TestCase):
                 "non_falsifiable_catalogue_question",
                 "diffuse_evidence_citations",
                 "critic_failed_to_challenge",
+                "unresolved_template_placeholders",
             })
 
     def test_incoherent_bridge_blocked_and_critic_informed(self):
