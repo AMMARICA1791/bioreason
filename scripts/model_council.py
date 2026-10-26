@@ -13,6 +13,7 @@ from bioreason.core import fetch
 from bioreason.focus import collect_focused_records, TOPIC
 from bioreason.council import MODEL_ROLES, run_council, verify_chain
 from bioreason.deliberation import discuss, load_memory, save_memory
+from bioreason.comparison import compare_solo_to_council
 
 MODEL_ID = "Qwen/Qwen2.5-0.5B-Instruct"
 ROLES = MODEL_ROLES
@@ -109,6 +110,25 @@ def main():
             "status": "unverified model-generated suggestion", "model": MODEL_ID,
         }
 
+    # The one-model baseline receives the SAME source set and Inventor task,
+    # without peers, the council trace or corrective memory. It shares the
+    # model and inference configuration but uses fewer model turns.
+    solo_evidence = {
+        "query": QUERY,
+        "round": 0,
+        "role_task": "Inventor: propose a testable, evidence-linked research question",
+        "records": [
+            {"id": p["id"], "title": p.get("title", "")[:160],
+             "abstract_excerpt": p.get("abstract", "")[:180],
+             "doi": p.get("doi", "")}
+            for p in papers
+        ],
+        "instruction": (
+            "Formulate ONE narrow falsifiable question using the supplied papers. "
+            "Do not make findings or fabricate citations."
+        ),
+    }
+    solo = local_inference("Inventor", solo_evidence)
     previous_memory = load_memory(MEMORY_FILE)
     print("Restored corrective-memory cycles:", previous_memory["completed_cycles"], flush=True)
     with patch("bioreason.council.ask_model", side_effect=local_inference):
@@ -118,7 +138,7 @@ def main():
             memory=previous_memory, rounds=DISCUSSION_ROUNDS,
         )
 
-    assert calls == list(ROLES) * (1 + DISCUSSION_ROUNDS), "Incomplete model-backed debate"
+    assert calls == ["Inventor"] + list(ROLES) * (1 + DISCUSSION_ROUNDS), "Incomplete solo/council inference"
     assert verify_chain(result["messages"]), "Broken council message chain"
     assert len(result["results"]) == 8 and result["audit_passed"]
     assert set(result["results"]["Builder"]["model_candidates"]) == {"Analyst", "Inventor", "Critic"}
@@ -126,6 +146,7 @@ def main():
     assert result["results"]["Validator"]["verified_findings"] == 0
     assert dialogue["chain_verified"] and verify_chain(dialogue["messages"])
     assert len(dialogue["turns"]) == len(ROLES) * DISCUSSION_ROUNDS
+    comparison = compare_solo_to_council(solo["candidate"], dialogue, papers)
 
     OUTPUT.parent.mkdir(exist_ok=True)
     OUTPUT.write_text(json.dumps({
@@ -140,6 +161,7 @@ def main():
         "scientific_validation": False,
         "council": result,
         "deliberation": dialogue,
+        "solo_vs_council": comparison,
     }, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     save_memory(MEMORY_FILE, dialogue["memory_after"])
     print("PASS: focused live Europe PMC records:", len(papers), "topic:", TOPIC, flush=True)
@@ -147,6 +169,12 @@ def main():
     print("PASS: eight-role council, verified handoff chain; findings unvalidated", flush=True)
     print("PASS: roundtable discussion:", DISCUSSION_ROUNDS, "rounds,", len(dialogue["turns"]), "model-backed turns", flush=True)
     print("Scientific release gate:", dialogue["publication_gate"], flush=True)
+    print("COMPARISON: solo proxy:", comparison["arms"]["solo"]["proxy_score"],
+          "council first:", comparison["arms"]["council_first"]["proxy_score"],
+          "council final:", comparison["arms"]["council_last"]["proxy_score"], flush=True)
+    print("COMPARISON: solo to council proxy delta:",
+          comparison["outcomes"]["solo_to_last_proxy_delta"], flush=True)
+    print("COMPARISON: general scientific improvement NOT established", flush=True)
     print("Inventor proposal screenings:", [r["scientific_screen"]["reason_codes"] for r in dialogue["candidate_reviews"]], flush=True)
     print("PASS: lessons remembered:", len(dialogue["memory_after"]["lessons"]), "categories; completed cycles:", dialogue["memory_after"]["completed_cycles"], flush=True)
 
