@@ -1,6 +1,7 @@
 """Deterministic, evidence-first biomedical literature triage prototype."""
 import json
 import re
+from html import unescape
 import urllib.parse
 import urllib.request
 from collections import Counter
@@ -11,7 +12,9 @@ API = "https://www.ebi.ac.uk/europepmc/webservices/rest/search"
 def fetch(query, limit=10):
     if not 1 <= limit <= 25:
         raise ValueError("limit must be between 1 and 25")
-    params = urllib.parse.urlencode({"query": query, "format": "json", "pageSize": limit})
+    params = urllib.parse.urlencode({
+        "query": query, "format": "json", "pageSize": limit, "resultType": "core"
+    })
     request = urllib.request.Request(
         API + "?" + params, headers={"User-Agent": "BioReason/0.2 research prototype"}
     )
@@ -20,6 +23,9 @@ def fetch(query, limit=10):
     return [
         {
             "title": record.get("title", ""),
+            "abstract": unescape(re.sub(
+                r"<[^>]*>", " ", record.get("abstractText") or ""
+            )).strip()[:1100],
             "year": record.get("pubYear", ""),
             "id": record.get("id", ""),
             "doi": record.get("doi", ""),
