@@ -10,12 +10,13 @@ from datetime import datetime, timezone
 from unittest.mock import patch
 
 from bioreason.core import fetch
+from bioreason.focus import collect_focused_records, TOPIC
 from bioreason.council import MODEL_ROLES, run_council, verify_chain
 from bioreason.deliberation import discuss, load_memory, save_memory
 
 MODEL_ID = "Qwen/Qwen2.5-0.5B-Instruct"
 ROLES = MODEL_ROLES
-QUERY = "OPEN_ACCESS:y AND FIRST_PDATE:[2026-01-01 TO 2026-12-31] AND (AI OR machine learning)"
+QUERY = "Cervical cancer AI imaging: formulate a testable evidence-linked research question"
 OUTPUT = pathlib.Path("artifacts/model-council.json")
 MEMORY_FILE = pathlib.Path(".bioreason_state/lessons.json")
 DISCUSSION_ROUNDS = 2
@@ -25,10 +26,9 @@ def main():
     from transformers import AutoModelForCausalLM, AutoTokenizer
     import torch
 
-    print("Collecting live Europe PMC research records", flush=True)
-    papers = fetch(QUERY, limit=10)
-    if not papers:
-        raise RuntimeError("Europe PMC did not return live research records")
+    print("Collecting focused Europe PMC research records:", TOPIC, flush=True)
+    source_query, papers = collect_focused_records(fetch)
+    print("Selected topic:", TOPIC, "records:", len(papers), flush=True)
     if not all(paper.get("id") and paper.get("source") for paper in papers):
         raise RuntimeError("Live research records are missing source identifiers")
     print("Live records received:", len(papers), flush=True)
@@ -49,11 +49,16 @@ def main():
         "Scout": "Identify relevant records by exact ID; state coverage gaps.",
         "Analyst": "Compare ONLY claims supported by the given paper titles and abstracts.",
         "Inventor": (
-            "Output one line in this exact format: 'Question: <one concrete, "
-            "testable question ending with ?> Source: <one exact provided "
-            "record ID>'. If evidence is insufficient, output "
-            "'ABSTAIN: missing evidence'. Never combine two diseases without "
-            "a record explicitly examining their relationship."
+            "Choose a SINGLE source record that concerns the focused disease. "
+            "Write ONE falsifiable question about a measurable outcome such as "
+            "diagnostic sensitivity, specificity or false-positive rate versus "
+            "an explicitly named baseline; do not claim a result was established. "
+            "Respond only as: Question: Could <specific intervention> improve "
+            "<measurable endpoint> compared with <baseline>? Source: <ONE exact "
+            "provided record ID>. If evidence is insufficient, write "
+            "'ABSTAIN: insufficient evidence'. Never write a catalogue question "
+            "such as 'What are some applications'; never cite all papers, "
+            "and never connect two diseases without an explicit joint record."
         ),
         "Critic": (
             "Challenge the latest Inventor hypothesis. If its scientific screen "
@@ -129,13 +134,15 @@ def main():
         "model_calls": calls,
         "source_mode": "europe_pmc_live",
         "record_count": len(papers),
+        "focused_topic": TOPIC,
+        "source_query": source_query,
         "papers": papers,
         "scientific_validation": False,
         "council": result,
         "deliberation": dialogue,
     }, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     save_memory(MEMORY_FILE, dialogue["memory_after"])
-    print("PASS: live Europe PMC records:", len(papers), flush=True)
+    print("PASS: focused live Europe PMC records:", len(papers), "topic:", TOPIC, flush=True)
     print("PASS: actual local model generated outputs for all eight roles:", ", ".join(calls), flush=True)
     print("PASS: eight-role council, verified handoff chain; findings unvalidated", flush=True)
     print("PASS: roundtable discussion:", DISCUSSION_ROUNDS, "rounds,", len(dialogue["turns"]), "model-backed turns", flush=True)
