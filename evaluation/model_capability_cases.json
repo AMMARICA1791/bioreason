@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "provenance": "Metadata excerpts from verified Europe PMC retrieval in GitHub run 40322483589, archived in artifact 12649479153. These are research bibliographic snippets, not expert-validated hypotheses.",
+  "source_run": "https://github.com/AMMARICA1791/bioreason/actions/runs/40322483589",
+  "cases": [
+    {
+      "case_id": "pap-smear-screening",
+      "topic": "cervical cancer",
+      "paper": {
+        "source": "MED",
+        "id": "42380812",
+        "title": "Artificial intelligence for cervical cancer screening and diagnosis using Pap smear images: a systematic review.",
+        "abstract": "This systematic review investigates artificial intelligence in diagnosis of cervical cancer based on Pap smear images, including early detection. The available excerpt does not establish a comparative clinical improvement."
+      },
+      "outcome_hint": "screening sensitivity or detection rate",
+      "baseline_hint": "conventional Pap smear interpretation"
+    },
+    {
+      "case_id": "mri-segmentation",
+      "topic": "cervical cancer",
+      "paper": {
+        "source": "MED",
+        "id": "42802541",
+        "title": "Deep Learning and Machine Learning Algorithms for Cervical Cancer Segmentation on MRI: A Systematic Review.",
+        "abstract": "The review considers machine-learning and deep-learning methods for automated cervical cancer segmentation on MRI; manual segmentation is time-consuming and variable. Review metadata alone does not prove clinical superiority."
+      },
+      "outcome_hint": "segmentation accuracy or inter-reader agreement",
+      "baseline_hint": "manual MRI segmentation"
+    }
+  ],
+  "limitations": [
+    "Curated metadata excerpts are condensed from real source records; not scientific benchmarks.",
+    "The model must propose a question and reference a supplied paper ID, not assert a finding.",
+    "Two cases cannot demonstrate generalizable scientific reasoning."
+  ]
+}
