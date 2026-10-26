@@ -33,7 +33,7 @@ PYTHONPATH=src python -m bioreason 'example query' --input examples/papers.json
 PYTHONPATH=src python -m unittest discover -s tests -v
 ```
 
-The online command requires Europe PMC access. Offline fixtures and unit tests require no network. The repository currently has **69 offline tests**, including biomedical cross-topic regression tests, source/DOI checks, eight-role inference-adapter coverage, discussion chaining, and safe memory replay; GitHub Actions has executed the Python 3.10–3.13 test matrix successfully. Passing software tests does **not** establish scientific accuracy.
+The online command requires Europe PMC access. Offline fixtures and unit tests require no network. The repository currently has **71 offline tests**, including biomedical cross-topic regression tests, source/DOI checks, eight-role inference-adapter coverage, discussion chaining, and safe memory replay; GitHub Actions has executed the Python 3.10–3.13 test matrix successfully. Passing software tests does **not** establish scientific accuracy.
 
 Input: JSON array of objects with `title`, `id`, `source`, `doi`, optionally `year`. Output: JSON printed to stdout. Example records are synthetic.
 
@@ -132,6 +132,16 @@ still goes through the normal gate.
 [69 offline tests and ten synthetic regression cases](https://github.com/AMMARICA1791/bioreason/actions/runs/40319788740)
 verify this behavior and the revised critique handoff on four Python
 versions. The updated real-model performance is evaluated separately.
+
+## Model copying an instruction template: detected and blocked
+
+[Real Qwen run 40319089691](https://github.com/AMMARICA1791/bioreason/actions/runs/40319089691)
+exposed a negative failure mode: both the solo model and the council reproduced
+unfilled examples such as `[specific method]` and `[measurable endpoint]`,
+with **2/6** proxy points each and no scientific approval. We removed literal
+question templates from generation prompts and added a gate rule rejecting
+unresolved placeholders in outputs. This is backed by focused unit tests, not
+by a demonstrated live model improvement.
 
 ## Evidence and provenance
 
