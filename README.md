@@ -33,7 +33,7 @@ PYTHONPATH=src python -m bioreason 'example query' --input examples/papers.json
 PYTHONPATH=src python -m unittest discover -s tests -v
 ```
 
-The online command requires Europe PMC access. Offline fixtures and unit tests require no network. The repository currently has **57 offline tests**, including biomedical cross-topic regression tests, source/DOI checks, eight-role inference-adapter coverage, discussion chaining, and safe memory replay; GitHub Actions has executed the Python 3.10–3.13 test matrix successfully. Passing software tests does **not** establish scientific accuracy.
+The online command requires Europe PMC access. Offline fixtures and unit tests require no network. The repository currently has **58 offline tests**, including biomedical cross-topic regression tests, source/DOI checks, eight-role inference-adapter coverage, discussion chaining, and safe memory replay; GitHub Actions has executed the Python 3.10–3.13 test matrix successfully. Passing software tests does **not** establish scientific accuracy.
 
 Input: JSON array of objects with `title`, `id`, `source`, `doi`, optionally `year`. Output: JSON printed to stdout. Example records are synthetic.
 
@@ -87,6 +87,12 @@ dropped the Critic's earlier objection before Inventor's revision. The
 earlier objection, validation feedback and exact blocking reasons **directly**
 to Inventor for a new attempt. Sources are suggested for review rather than
 silently inserted into the model's answer. The regression is tested.
+
+## First experimental result (negative, not hidden)
+
+The first [actual Qwen solo-versus-council comparison](https://github.com/AMMARICA1791/bioreason/actions/runs/40316126789) found **no improvement**: a solo model response scored **one proxy point higher** than the final council proposal on the same literature; none of the three proposals cited a usable record ID, so all were held. The original metric mistakenly credited an uncited paper's mere presence in the bibliography. After fixing the metric to require an **actually cited supporting paper**, the comparison was **3/6 solo, 2/6 first council, 2/6 last council**. Both original and corrected interpretations are preserved in [RUN_EVIDENCE.md](RUN_EVIDENCE.md).
+
+The prior Critic objection was also dropped from the next Inventor's rolling context. The [handoff fix](src/bioreason/deliberation.py) explicitly delivers reviewer objections and gate reasons to the next Inventor turn, but a new real-model evaluation is required before claiming it improves answers.
 
 ## Evidence and provenance
 
