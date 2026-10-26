@@ -33,7 +33,7 @@ PYTHONPATH=src python -m bioreason 'example query' --input examples/papers.json
 PYTHONPATH=src python -m unittest discover -s tests -v
 ```
 
-The online command requires Europe PMC access. Offline fixtures and unit tests require no network. The repository currently has **46 offline tests**, including biomedical cross-topic regression tests, source/DOI checks, eight-role inference-adapter coverage, discussion chaining, and safe memory replay; GitHub Actions has executed the Python 3.10–3.13 test matrix successfully. Passing software tests does **not** establish scientific accuracy.
+The online command requires Europe PMC access. Offline fixtures and unit tests require no network. The repository currently has **57 offline tests**, including biomedical cross-topic regression tests, source/DOI checks, eight-role inference-adapter coverage, discussion chaining, and safe memory replay; GitHub Actions has executed the Python 3.10–3.13 test matrix successfully. Passing software tests does **not** establish scientific accuracy.
 
 Input: JSON array of objects with `title`, `id`, `source`, `doi`, optionally `year`. Output: JSON printed to stdout. Example records are synthetic.
 
@@ -70,6 +70,23 @@ not scientific causality. The Inventor must pose a narrow research question
 supported by at most three actually supplied source identifiers, or abstain.
 Catalogue-style questions about general AI applications are held by the
 independent quality gate.
+
+## Direct test of whether peer critique adds value
+
+[The predeclared experiment](EVALUATION_PROTOCOL.md) compares one Qwen
+Inventor reply without peers to the first and last council Inventor replies
+on the **same live bibliography and model**. [A separate verification
+script](scripts/evaluate_run.py) independently recomputes all proxy scores
+from the archived, hash-linked trace and **reports regressions as well as
+improvements**. It never labels machine-readable formatting as scientific
+truth; the multi-agent arm uses more inference than the solo arm.
+
+An actual prior-council trace revealed that the rolling four-message window
+dropped the Critic's earlier objection before Inventor's revision. The
+[deliberation logic](src/bioreason/deliberation.py) now delivers the actual
+earlier objection, validation feedback and exact blocking reasons **directly**
+to Inventor for a new attempt. Sources are suggested for review rather than
+silently inserted into the model's answer. The regression is tested.
 
 ## Evidence and provenance
 
