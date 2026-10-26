@@ -53,7 +53,9 @@ class EvaluationVerificationTests(unittest.TestCase):
         self.assertFalse(report["proxy_improvement_observed_in_one_run"])
         self.assertEqual(report["critic_turns"], 2)
         self.assertEqual(report["critic_unaudited_turns"], 0)
-        self.assertEqual(report["critic_failed_challenge"], 2)
+        # A grounded tentative Inventor response imposes no *automatic*
+        # blocking objection, so generic Critic text is not miscounted.
+        self.assertEqual(report["critic_failed_challenge"], 0)
 
     def test_missing_critique_audit_reported_not_claimed_success(self):
         d = build_evidence()
