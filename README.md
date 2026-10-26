@@ -33,7 +33,7 @@ PYTHONPATH=src python -m bioreason 'example query' --input examples/papers.json
 PYTHONPATH=src python -m unittest discover -s tests -v
 ```
 
-The online command requires Europe PMC access. Offline fixtures and unit tests require no network. The repository currently has **78 offline tests**, including biomedical cross-topic regression tests, source/DOI checks, eight-role inference-adapter coverage, discussion chaining, and safe memory replay; GitHub Actions has executed the Python 3.10–3.13 test matrix successfully. Passing software tests does **not** establish scientific accuracy.
+The online command requires Europe PMC access. Offline fixtures and unit tests require no network. The repository currently has **96 offline tests**, including biomedical cross-topic regression tests, source/DOI checks, eight-role inference-adapter coverage, discussion chaining, and safe memory replay; GitHub Actions has executed the Python 3.10–3.13 test matrix successfully. Passing software tests does **not** establish scientific accuracy.
 
 Input: JSON array of objects with `title`, `id`, `source`, `doi`, optionally `year`. Output: JSON printed to stdout. Example records are synthetic.
 
@@ -157,16 +157,38 @@ correction](RUN_EVIDENCE.md) are retained.
 
 A new conservative `solo_vs_council.selection` chooses the best
 *evidence-screened tentative research lead for human review only*: it
-retains solo if council fails the evidence gate or ties/underperforms,
-uses council only when it has a strictly better screened candidate,
-and returns no lead if both fail. The independent evidence
+retains the **highest-scoring screened** tentative lead across solo,
+first-round council and final council replies, breaking ties in favor
+of the earlier screened reply. It returns no lead if all three fail. The independent evidence
 verification script prevents changing the selected source without
 detecting tampering. This safeguard **does not** make council reasoning
 more accurate and **does not publish** any biomedical conclusion.
 
-[78 passing offline tests](https://github.com/AMMARICA1791/bioreason/actions/runs/40322627429)
+[96 passing offline tests](https://github.com/AMMARICA1791/bioreason/actions/runs/40329408456)
 on Python 3.10–3.13 include replay of the original Qwen failure
 and checks for non-regression and tampering.
+
+## Measured model capability and corrected source checking
+
+In a [controlled eight-inference probe](https://github.com/AMMARICA1791/bioreason/actions/runs/40326374533),
+Qwen2.5-1.5B produced stronger **initial** sourced questions than Qwen2.5-0.5B
+on two fixed records, but **both models degraded during revision**.
+An [isolated eight-role pilot](https://github.com/AMMARICA1791/bioreason/actions/runs/40327497545)
+used 1.5B for Inventor with seven default 0.5B peers. The final council
+revision still lost a legitimate paper identifier and underperformed the
+solo reply; default production and persistent memory settings were unchanged.
+
+The pilot also revealed a **real deterministic verification bug**:
+a genuine DOI wrapped as `[DOI: 10.1186/s12885-026-16427-y]` was
+misread as fabricated. Fixed DOI normalization and exact-transcript
+regressions establish corrected *posthoc* proxy scores of **5/6 solo,
+5/6 first council, 3/6 final council**; this does not validate scientific
+accuracy or turn the final revision into a success.
+
+[Run evidence](RUN_EVIDENCE.md) reports historical original scores,
+correction details and artifact links without deleting negative results.
+[The model-capability protocol](MODEL_CAPABILITY_PROTOCOL.md) preserves
+its outcome criteria and full initial/revised responses.
 
 ## Evidence and provenance
 
