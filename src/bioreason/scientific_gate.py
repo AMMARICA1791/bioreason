@@ -69,8 +69,8 @@ def assess_candidate(candidate, records):
         reasons.append("no_explicit_testable_question")
     # A catalogue question is not a falsifiable hypothesis, even with real IDs.
     if re.search(
-        r"\\b(?:what are some|what (?:are|is) the (?:applications|uses|benefits|roles)|"
-        r"list (?:some|the)|give examples of|overview of)\\b",
+        r"\b(?:what are some|what (?:are|is) the (?:applications|uses|benefits|roles)|"
+        r"list (?:some|the)|give examples of|overview of)\b",
         candidate, re.IGNORECASE,
     ):
         reasons.append("non_falsifiable_catalogue_question")
