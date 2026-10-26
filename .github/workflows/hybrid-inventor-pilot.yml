@@ -1,0 +1,50 @@
+name: BioReason hybrid Inventor pilot
+
+on:
+  push:
+    paths:
+      - '.github/workflows/hybrid-inventor-pilot.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: bioreason-inventor-pilot
+  cancel-in-progress: false
+
+jobs:
+  inventors:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install free local CPU inference runtimes
+        run: |
+          python -m pip install --disable-pip-version-check torch --index-url https://download.pytorch.org/whl/cpu
+          python -m pip install --disable-pip-version-check 'transformers>=4.45,<5' 'safetensors>=0.4'
+      - name: Prove default and pilot model role isolation
+        run: PYTHONPATH=src python -m unittest discover -s tests -q
+      - name: Run isolated eight-role council with 1.5B Inventor
+        env:
+          BIOREASON_INVENTOR_MODEL: Qwen/Qwen2.5-1.5B-Instruct
+          HF_HUB_DISABLE_TELEMETRY: '1'
+          TOKENIZERS_PARALLELISM: 'false'
+        run: PYTHONPATH=src python scripts/model_council.py
+      - name: Verify unchanged source and model-run evidence
+        run: PYTHONPATH=src python scripts/evaluate_run.py
+      - name: Archive complete hybrid evidence without updating standard memory cache
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: inventor-15b-council-pilot-evidence
+          path: |
+            artifacts/model-council.json
+            artifacts/comparison-verification.json
+            .bioreason_state/lessons.json
+          include-hidden-files: true
+          if-no-files-found: warn
+          retention-days: 30
