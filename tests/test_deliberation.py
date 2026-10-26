@@ -173,6 +173,68 @@ class DeliberationTests(unittest.TestCase):
         self.assertFalse(result["scientific_validation"])
         self.assertTrue(verify_chain(result["messages"]))
 
+    def test_second_round_inventor_receives_actual_prior_critic(self):
+        # Regression for the four-message window dropping previous critique.
+        papers = [
+            {"title": "Cervical cancer Pap smear screening studies",
+             "id": "PMC456", "source": "PMC",
+             "abstract": "Comparison of sensitivity in image screening."},
+            {"title": "Cervical cancer deep learning classification",
+             "id": "PMC789", "source": "PMC"},
+        ]
+        base = run_council("cervical cancer screening", papers)
+        inventor_evidence = []
+
+        def infer(role, evidence):
+            if role == "Inventor":
+                inventor_evidence.append(evidence)
+                if evidence["round"] == 1:
+                    return {"role": role, "candidate":
+                            "Could cervical cancer screening sensitivity improve?"}
+                feedback = evidence["mandatory_revision_feedback"]
+                return {"role": role, "candidate":
+                        "Could cervical cancer screening sensitivity improve "
+                        "compared with standard practice? PMC456"}
+            if role == "Critic":
+                return {"role": role, "candidate":
+                        "BLOCKED: the Inventor failed to cite an exact source record ID."}
+            return {"role": role, "candidate":
+                    "Bibliographic metadata does not prove improvement."}
+
+        output = discuss("cervical cancer screening", papers, base, infer, rounds=2)
+        self.assertIsNone(inventor_evidence[0]["mandatory_revision_feedback"])
+        feedback = inventor_evidence[1]["mandatory_revision_feedback"]
+        self.assertEqual(feedback["previous_gate_decision"],
+                         "hold_for_independent_review")
+        self.assertIn("missing_record_citation", feedback["specific_hold_reasons"])
+        self.assertIn("failed to cite", feedback["critic_objection"])
+        self.assertEqual(
+            feedback["possible_source_to_review_not_automatically_approved"]["id"],
+            "PMC456",
+        )
+        self.assertEqual(output["candidate_reviews"][0]["status"], "held_pending_evidence")
+        self.assertEqual(output["candidate_reviews"][1]["status"],
+                         "unverified model deliberation")
+        self.assertEqual(output["publication_gate"], "tentative_review_only")
+        self.assertTrue(verify_chain(output["messages"]))
+
+    def test_inventor_feedback_does_not_auto_attach_a_source(self):
+        papers = [
+            {"title": "Cervical cancer screening", "id": "PMC1", "source": "PMC"},
+            {"title": "Cervical cancer imaging", "id": "PMC2", "source": "PMC"},
+        ]
+        base = run_council("cervical cancer", papers)
+        def stubborn(role, evidence):
+            return {"role": role, "candidate":
+                    "Could cervical cancer screening accuracy improve?"}
+        output = discuss("cervical cancer", papers, base, stubborn, rounds=2)
+        self.assertIsNone(output["final_tentative_candidate"])
+        self.assertEqual(output["publication_gate"], "hold_for_independent_review")
+        self.assertTrue(all(
+            "missing_record_citation" in record["scientific_screen"]["reason_codes"]
+            for record in output["candidate_reviews"]
+        ))
+
     def test_bad_council_and_invalid_rounds_rejected(self):
         broken = dict(self.base, audit_passed=False)
         with self.assertRaises(ValueError):
