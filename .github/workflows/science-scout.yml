@@ -1,0 +1,35 @@
+name: BioReason multidisciplinary science scout
+
+on:
+  push:
+    paths:
+      - '.github/workflows/science-scout.yml'
+      - 'scripts/scientific_exploration.py'
+      - 'src/bioreason/multidomain.py'
+      - 'tests/test_multidomain.py'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  discover:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Verify deterministic multidisciplinary selection tests
+        run: PYTHONPATH=src python -m unittest discover -s tests -q
+      - name: Scout science-wide public literature
+        run: PYTHONPATH=src python scripts/scientific_exploration.py
+      - name: Archive actual papers and eight-role audit
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: multidisciplinary-science-scout-evidence
+          path: artifacts/science-exploration.json
+          if-no-files-found: warn
+          retention-days: 30
