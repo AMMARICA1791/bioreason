@@ -75,7 +75,7 @@ CRITIQUE_CHALLENGE_WORDS = re.compile(
 # A review is not made critical merely by including the words "paper" and
 # "not" in unrelated sentences. Require an explicit *source-related*
 # objection within a short span. This still checks phrasing, not science.
-_SOURCE_OBJECT = r"(?:source|citation|reference|record|paper|study|bibliograph|doi|source id)"
+_SOURCE_OBJECT = r"(?:source(?:s| id)?|citat\w*|referenc\w*|record(?:s| id)?|bibliograph\w*|doi|(?:paper|study) id)"
 _NEGATIVE = r"(?:missing|absent|unsupported|insufficient|lacks?|without|no|not|must|needs?|requires?|wrong|unrelated|invalid|unverified)"
 SOURCE_OBJECTION = re.compile(
     rf"\b{_NEGATIVE}\b.{{0,95}}\b{_SOURCE_OBJECT}\b"
