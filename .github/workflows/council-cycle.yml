@@ -25,6 +25,8 @@ jobs:
         run: PYTHONPATH=src python -m unittest discover -s tests -v
       - name: Execute all eight agents and verify the handoff chain
         run: PYTHONPATH=src python scripts/smoke_council.py
+      - name: Collect live biomedical records and execute the council
+        run: PYTHONPATH=src python scripts/live_council.py
       - name: Archive execution evidence even if tests fail
         if: always()
         uses: actions/upload-artifact@v4
