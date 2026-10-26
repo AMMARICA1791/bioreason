@@ -219,6 +219,7 @@ def main():
         "council": result,
         "deliberation": dialogue,
         "solo_vs_council": comparison,
+        "selected_for_independent_human_review": comparison["selection"],
     }, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     save_memory(MEMORY_FILE, dialogue["memory_after"])
     print("PASS: focused live Europe PMC records:", len(papers), "topic:", TOPIC, flush=True)
@@ -226,6 +227,9 @@ def main():
     print("PASS: eight-role council, verified handoff chain; findings unvalidated", flush=True)
     print("PASS: roundtable discussion:", DISCUSSION_ROUNDS, "rounds,", len(dialogue["turns"]), "model-backed turns", flush=True)
     print("Scientific release gate:", dialogue["publication_gate"], flush=True)
+    print("REVIEW LEAD SELECTION:", comparison["selection"]["source"],
+          "status:", comparison["selection"]["status"],
+          "(not scientific validation)", flush=True)
     print("COMPARISON: solo proxy:", comparison["arms"]["solo"]["proxy_score"],
           "council first:", comparison["arms"]["council_first"]["proxy_score"],
           "council final:", comparison["arms"]["council_last"]["proxy_score"], flush=True)
