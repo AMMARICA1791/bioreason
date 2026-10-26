@@ -65,6 +65,8 @@ def assess_candidate(candidate, records):
     reasons = []
     if not topics:
         reasons.append("unassessed_biomedical_topics")
+    if "?" not in candidate:
+        reasons.append("no_explicit_testable_question")
     if missing:
         reasons.append("topic_not_supported_by_retrieved_records")
     if len(topics) >= 2 and not records_covering_all:
