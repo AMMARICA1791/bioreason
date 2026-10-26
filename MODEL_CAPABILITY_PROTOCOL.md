@@ -46,6 +46,37 @@ pretend that longer deliberation equals learning.
 An experimental improvement in proxy form is never independent scientific
 validation, clinical advice, a patent claim, or proof of generalization.
 
+## Actual results of the initial probe (after protocol freeze)
+
+[GitHub run 40326374533](https://github.com/AMMARICA1791/bioreason/actions/runs/40326374533)
+**completed successfully** on 2026-10-26 with the frozen inputs and
+eight actual, deterministic local model generations. [Full original
+artifact](https://github.com/AMMARICA1791/bioreason/actions/runs/40326374533/artifacts/12651008953)
+preserves every unedited response.
+
+| Frozen case | Model | First proxy | Revised proxy | Citation outcome |
+| --- | --- | ---: | ---: | --- |
+| Pap-smear screening | Qwen 0.5B | 1/6 | 1/6 | No source ID in either |
+| MRI segmentation | Qwen 0.5B | 3/6 | 1/6 | No source ID in either |
+| Pap-smear screening | Qwen 1.5B | 6/6 | 5/6 | Source ID retained |
+| MRI segmentation | Qwen 1.5B | 5/6 | 2/6 | **Source ID lost in revision** |
+
+The **1.5B model satisfied the predefined preliminary candidacy rule**:
+its initial source-linked questions passed the limited evidence screen in both
+cases, and its aggregate proxy scores and source retention exceeded the 0.5B
+model. Its revisions **still got worse**, including a lost citation.
+
+**Interpretation:** a slightly larger model can better handle this source
+formatting/testability task, but neither model demonstrated positive
+adaptation to the deterministic critique in these two examples.
+The small sample size, broad biomedical lexicon, nonexpert proxy,
+unequal model parameter counts and curated excerpts preclude claims
+about real-world scientific accuracy. These results do **not**
+justify an automatic change to the default eight-role council.
+
+A separate, isolated eight-role pilot tests a 1.5B Inventor with
+the default 0.5B peers; no old results are replaced by its existence.
+
 ## Reproducibility
 
 - Inputs: [frozen cases](evaluation/model_capability_cases.json)
