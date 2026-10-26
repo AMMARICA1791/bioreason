@@ -1,0 +1,138 @@
+{
+  "dataset_version": 1,
+  "description": "Synthetic software regression examples, NOT expert-labelled clinical assessment.",
+  "cases": [
+    {
+      "id": "observed-cervical-glaucoma-error",
+      "expected": "hold_for_independent_review",
+      "candidate": "Can glaucoma retinal images improve cervical cancer diagnosis? PMC13650561 PMC13639773",
+      "papers": [
+        {
+          "id": "PMC13650561",
+          "source": "PMC",
+          "title": "Artificial intelligence for cervical cancer diagnosis"
+        },
+        {
+          "id": "PMC13639773",
+          "source": "PMC",
+          "title": "Retinal fundus imaging for glaucoma classification"
+        }
+      ]
+    },
+    {
+      "id": "cervical-supported-proposal",
+      "expected": "tentative_only",
+      "candidate": "Can deep learning support cervical cancer diagnosis? PMC13650561",
+      "papers": [
+        {
+          "id": "PMC13650561",
+          "source": "PMC",
+          "title": "AI diagnosis of cervical cancer"
+        }
+      ]
+    },
+    {
+      "id": "fake-biomedical-source",
+      "expected": "hold_for_independent_review",
+      "candidate": "Can cervical cancer screening improve? PMC99999999",
+      "papers": [
+        {
+          "id": "PMC13650561",
+          "source": "PMC",
+          "title": "AI diagnosis of cervical cancer"
+        }
+      ]
+    },
+    {
+      "id": "invented-doi",
+      "expected": "hold_for_independent_review",
+      "candidate": "Cervical cancer screening DOI 10.9999/fake PMC13650561",
+      "papers": [
+        {
+          "id": "PMC13650561",
+          "source": "PMC",
+          "title": "AI diagnosis of cervical cancer",
+          "doi": "10.1000/genuine"
+        }
+      ]
+    },
+    {
+      "id": "absent-disease",
+      "expected": "hold_for_independent_review",
+      "candidate": "Could malaria worsen cervical cancer? PMC13650561",
+      "papers": [
+        {
+          "id": "PMC13650561",
+          "source": "PMC",
+          "title": "AI diagnosis of cervical cancer"
+        }
+      ]
+    },
+    {
+      "id": "joint-topics-have-direct-record",
+      "expected": "tentative_only",
+      "candidate": "Could cervical cancer screening leverage glaucoma imaging research? PMCJOINT",
+      "papers": [
+        {
+          "id": "PMCJOINT",
+          "source": "PMC",
+          "title": "Feasibility study of glaucoma imaging research and cervical cancer data linkage"
+        }
+      ]
+    },
+    {
+      "id": "protein-folding-anchored",
+      "expected": "tentative_only",
+      "candidate": "Could protein folding prediction benefit from AI? PMC400",
+      "papers": [
+        {
+          "id": "PMC400",
+          "source": "PMC",
+          "title": "Prediction methods for protein folding"
+        }
+      ]
+    },
+    {
+      "id": "unknown-topics-outside-lexicon",
+      "expected": "hold_for_independent_review",
+      "candidate": "Do novel metabolic enzyme signatures imply an intervention? PMC400",
+      "papers": [
+        {
+          "id": "PMC400",
+          "source": "PMC",
+          "title": "Novel metabolic enzyme signatures"
+        }
+      ]
+    },
+    {
+      "id": "breast-glaucoma-unverified-bridge",
+      "expected": "hold_for_independent_review",
+      "candidate": "Use glaucoma retinal images to diagnose breast cancer? PMC100 PMC200",
+      "papers": [
+        {
+          "id": "PMC100",
+          "source": "PMC",
+          "title": "Fundus imaging in glaucoma"
+        },
+        {
+          "id": "PMC200",
+          "source": "PMC",
+          "title": "Breast cancer screening"
+        }
+      ]
+    },
+    {
+      "id": "abstract-grounded-retinopathy",
+      "expected": "tentative_only",
+      "candidate": "Could diabetic retinopathy detection improve? PMC600",
+      "papers": [
+        {
+          "id": "PMC600",
+          "source": "PMC",
+          "title": "Ophthalmology imaging models",
+          "abstract": "AI methods for diabetic retinopathy detection."
+        }
+      ]
+    }
+  ]
+}
