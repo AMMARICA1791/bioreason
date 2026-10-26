@@ -53,6 +53,7 @@ jobs:
             artifacts/model-council.json
             .bioreason_state/lessons.json
           if-no-files-found: warn
+          include-hidden-files: true
           retention-days: 30
       - name: Persist updated lessons for the next run
         if: success()
