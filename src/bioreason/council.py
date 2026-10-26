@@ -8,6 +8,7 @@ from datetime import datetime, timezone
 from hashlib import sha256
 import json
 from .core import scout, analyst, inventor, critic, validator
+from .model import ask_model
 
 
 @dataclass(frozen=True)
@@ -33,7 +34,10 @@ def _message(sequence, sender, recipient, kind, payload, previous_hash):
 class Council:
     """Coordinator invokes bounded agents and records every inter-agent handoff."""
 
-    def __init__(self):
+    def __init__(self, model_roles=()):
+        self.model_roles = frozenset(model_roles)
+        if not self.model_roles.issubset({"Analyst", "Inventor", "Critic"}):
+            raise ValueError("Model roles must be Analyst, Inventor, or Critic")
         self.messages = []
         self.results = {}
 
@@ -59,9 +63,15 @@ class Council:
         self.results["Analyst"] = analyst(papers)
         self.send("Analyst", "Inventor", "title_terms", self.results["Analyst"])
         self.results["Inventor"] = inventor(self.results["Analyst"])
+        if "Analyst" in self.model_roles:
+            self.results["Analyst"]["model_suggestion"] = ask_model("Analyst", {"query": query, "papers": papers})
+        if "Inventor" in self.model_roles:
+            self.results["Inventor"]["model_suggestion"] = ask_model("Inventor", {"query": query, "analysis": self.results["Analyst"]})
         self.send("Inventor", "Critic", "candidate", self.results["Inventor"])
 
         self.results["Critic"] = critic(papers)
+        if "Critic" in self.model_roles:
+            self.results["Critic"]["model_suggestion"] = ask_model("Critic", {"query": query, "candidate": self.results["Inventor"]})
         self.send("Critic", "Validator", "review", self.results["Critic"])
         self.results["Validator"] = validator(papers)
         self.send("Validator", "Builder", "evidence_status", self.results["Validator"])
@@ -112,5 +122,5 @@ def verify_chain(messages):
     return True
 
 
-def run_council(query, papers):
-    return Council().execute(query, papers)
+def run_council(query, papers, model_roles=()):
+    return Council(model_roles=model_roles).execute(query, papers)
