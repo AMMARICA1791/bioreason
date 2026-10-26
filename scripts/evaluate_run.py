@@ -31,6 +31,21 @@ def check_run(data):
     expected_calls = ["Inventor"] + list(MODEL_ROLES) * (1 + dialogue["rounds"])
     if calls != expected_calls:
         raise ValueError("Model call trace does not match declared comparison")
+    # Count model-provided substantive objections separately from
+    # deterministic issue screens. A hash-linked chat turn is not peer review.
+    critic_turns = [t for t in dialogue["turns"] if t["role"] == "Critic"]
+    critic_audits = [
+        t.get("critic_response_audit") for t in critic_turns
+    ]
+    explicit_challenges = sum(
+        a is not None and a.get("audit") == "challenge_explicit"
+        for a in critic_audits
+    )
+    failed_challenges = sum(
+        a is not None and a.get("audit") == "critic_failed_to_challenge"
+        for a in critic_audits
+    )
+    unaudited = sum(a is None for a in critic_audits)
     outcomes = expected["outcomes"]
     proxy_success = (
         outcomes["solo_to_last_proxy_delta"] > 0
@@ -49,6 +64,10 @@ def check_run(data):
         "solo_to_last_delta": outcomes["solo_to_last_proxy_delta"],
         "first_to_last_delta": outcomes["first_to_last_proxy_delta"],
         "final_gate": outcomes["last_scientific_gate"],
+        "critic_turns": len(critic_turns),
+        "critic_explicit_objections": explicit_challenges,
+        "critic_failed_challenge": failed_challenges,
+        "critic_unaudited_turns": unaudited,
         "proxy_improvement_observed_in_one_run": proxy_success,
         "scientific_improvement_demonstrated": False,
         "message_chain_verified": True,
@@ -70,6 +89,9 @@ def main():
     print("Council first proxy:", report["council_first_proxy_score"])
     print("Council last proxy:", report["council_last_proxy_score"])
     print("SOLO-COUNCIL PROXY IMPROVEMENT:", report["proxy_improvement_observed_in_one_run"])
+    print("CRITIC AUDIT:", report["critic_explicit_objections"], "explicit objections,",
+          report["critic_failed_challenge"], "failed challenges,",
+          report["critic_unaudited_turns"], "not audited")
     print("SCIENTIFIC IMPROVEMENT DEMONSTRATED: False")
 
 
