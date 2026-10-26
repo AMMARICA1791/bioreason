@@ -54,6 +54,11 @@ LESSON_GUIDANCE = {
         "Never copy example placeholders from instructions into research output. "
         "Use actual paper facts and exact source identifiers or abstain."
     ),
+    "doi_record_id_mismatch": (
+        "A DOI and the cited study ID refer to different source records. "
+        "Cross-check the two identifiers against the same retrieved paper "
+        "before reusing them as evidence."
+    ),
 }
 ROLE_TASKS = {
     "Scout": "Identify the strongest traceable records and missing coverage.",
@@ -297,6 +302,7 @@ def discuss(query, papers, base_council, infer, memory=None, rounds=ROUNDS):
                     "non_falsifiable_catalogue_question",
                     "diffuse_evidence_citations",
                     "unresolved_template_placeholders",
+                    "doi_record_id_mismatch",
                 ):
                     if code in scientific_screen["reason_codes"] and code not in issues:
                         issues.append(code)
