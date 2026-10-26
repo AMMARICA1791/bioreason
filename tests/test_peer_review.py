@@ -35,7 +35,9 @@ class PeerReviewTests(unittest.TestCase):
             "This paper reviews artificial intelligence in cervical cancer.", duties
         )
         self.assertEqual(result["audit"], "critic_failed_to_challenge")
-        self.assertFalse(result["missing_source_challenge"])
+        # Mentioning "paper" without identifying a source defect is NOT a
+        # relevant source challenge under the tightened review audit.
+        self.assertTrue(result["missing_source_challenge"])
         self.assertTrue(result["uncritical_paraphrase"])
 
     def test_precise_source_challenge_is_counted_not_validated(self):
