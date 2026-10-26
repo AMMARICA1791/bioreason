@@ -28,9 +28,9 @@ def evaluate_candidate(text, papers):
     checks = {
         "contains_question": "?" in text,
         "source_identifier_present": bool(screen["cited_record_ids"]),
-        "direct_topic_evidence": (
-            bool(screen["record_ids_covering_all_topics"]) and
-            "citation_does_not_support_topics" not in screen["reason_codes"]
+        "direct_topic_evidence": bool(
+            set(screen["cited_record_ids"]) &
+            set(screen["record_ids_covering_all_topics"])
         ),
         "no_blocking_reason": screen["decision"] == "tentative_only",
         "measurable_endpoint_mentioned": bool(MEASURABLE_ENDPOINT.search(text)),
