@@ -276,6 +276,29 @@ class DeliberationTests(unittest.TestCase):
         self.assertTrue(verify_chain(outcome["messages"]))
         self.assertEqual(outcome["publication_gate"], "hold_for_independent_review")
 
+    def test_abstention_is_not_incentivized_into_a_false_reference(self):
+        papers = [
+            {"title": "Cervical cancer diagnostic review",
+             "id": "PMC600", "source": "PMC"},
+        ]
+        base = run_council("novel mechanism", papers)
+
+        def abstain(role, evidence):
+            if role == "Inventor":
+                return {"role": role, "candidate": "ABSTAIN: insufficient evidence"}
+            return {"role": role, "candidate": "Additional evidence is required."}
+
+        result = discuss("novel mechanism", papers, base, abstain, rounds=2)
+        inventors = [x for x in result["turns"] if x["role"] == "Inventor"]
+        self.assertEqual(len(inventors), 2)
+        self.assertTrue(all(x["status"] == "abstained_insufficient_evidence"
+                            for x in inventors))
+        self.assertTrue(all("missing_source_anchor" not in x["issue_codes"]
+                            for x in inventors))
+        self.assertEqual(result["publication_gate"], "abstained_insufficient_evidence")
+        self.assertIsNone(result["final_tentative_candidate"])
+        self.assertFalse(result["scientific_validation"])
+
     def test_bad_council_and_invalid_rounds_rejected(self):
 
         broken = dict(self.base, audit_passed=False)
