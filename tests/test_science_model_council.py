@@ -25,7 +25,7 @@ class ScienceCouncilTests(unittest.TestCase):
         result = select_review_candidate(question, question, question, PAPERS)
         self.assertEqual(result["selected_from"], "none")
         self.assertIsNone(result["candidate"])
-        self.assertEqual(result["status"], "no_supported_cross_domain_lead")
+        self.assertEqual(result["status"], "no_source_grounded_lead")
 
     def test_first_council_lead_is_not_erased_by_bad_revision(self):
         weak = "Could neuromorphic devices improve photodetectors?"
@@ -34,10 +34,13 @@ class ScienceCouncilTests(unittest.TestCase):
         self.assertEqual(result["selected_from"], "council_initial")
         self.assertEqual(result["candidate"], good)
 
-    def test_merely_citing_one_field_is_not_interdisciplinary(self):
+    def test_one_field_can_yield_a_cautious_testable_research_lead(self):
         one = "Could a new perovskite detector 10.1000/materials improve device sensitivity?"
         result = select_review_candidate(one, one, one, PAPERS)
-        self.assertEqual(result["selected_from"], "none")
+        self.assertEqual(result["selected_from"], "solo")
+        self.assertEqual(result["cited_domains"], ["materials"])
+        self.assertFalse(result["cross_domain_evidence"])
+        self.assertFalse(result["scientific_validation"])
 
     def test_fabricated_second_doi_does_not_pass(self):
         bad = "Could 10.1000/materials and 10.1000/fabricated be tested in a comparison?"
