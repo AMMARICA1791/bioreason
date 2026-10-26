@@ -1,0 +1,49 @@
+name: BioReason memory transfer proof
+
+on:
+  push:
+    paths:
+      - '.github/workflows/memory-proof.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify-restoration:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Restore the previously saved council memory
+        id: memory
+        uses: actions/cache/restore@v4
+        with:
+          path: .bioreason_state/lessons.json
+          key: bioreason-memory-proof-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: |
+            bioreason-corrective-memory-v1-
+      - name: Prove memory came from an earlier run
+        env:
+          MATCHED_CACHE_KEY: ${{ steps.memory.outputs.cache-matched-key }}
+        run: |
+          test -n "$MATCHED_CACHE_KEY" || { echo "FAIL: no previous-run cache restored"; exit 1; }
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p = Path(".bioreason_state/lessons.json")
+          data = json.loads(p.read_text(encoding="utf-8"))
+          assert data["version"] == 1
+          assert data["completed_cycles"] >= 1
+          assert any(x["code"] == "missing_source_anchor" and x["count"] > 0 for x in data["lessons"])
+          print("PASS: persisted council corrective memory restored from a prior GitHub Actions run")
+          print("Restored completed cycles:", data["completed_cycles"])
+          print("Restored lesson codes:", [x["code"] for x in data["lessons"]])
+          PY
+      - name: Export cross-run memory verification artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: persisted-council-memory-proof
+          path: .bioreason_state/lessons.json
+          include-hidden-files: true
+          retention-days: 30
