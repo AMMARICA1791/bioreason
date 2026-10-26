@@ -58,10 +58,12 @@ def main():
             "Write ONE falsifiable question about a measurable outcome such as "
             "diagnostic sensitivity, specificity or false-positive rate versus "
             "an explicitly named baseline; do not claim a result was established. "
-            "Respond only as: Question: Could <specific intervention> improve "
-            "<measurable endpoint> compared with <baseline>? Source: <ONE exact "
-            "provided record ID>. If evidence is insufficient, write "
-            "'ABSTAIN: insufficient evidence'. Never write a catalogue question "
+            "Write a real question using the actual disease and technique from "
+            "the provided paper, and state the exact source ID separately. "
+            "Do not copy instructional text, make up bracketed fields, or "
+            "output template placeholders. If the source cannot support a "
+            "specific question, write 'ABSTAIN: insufficient evidence'. "
+            "Never write a catalogue question "
             "such as 'What are some applications'; never cite all papers, "
             "and never connect two diseases without an explicit joint record."
         ),
@@ -106,9 +108,12 @@ def main():
                 "actual_critic_objection": feedback.get("critic_objection"),
                 "all_available_ids": record_ids,
                 "remembered_lessons": evidence.get("remembered_corrective_lessons", [])[:3],
-                "required_format": (
-                    "Question: Could [specific method] improve [measurable endpoint] "
-                    "versus [baseline]? Source: [EXACT paper ID from the given record]"
+                "answer_requirements": (
+                    "In a short answer, ask one real research question naming "
+                    "a technique from the paper and a measurable outcome "
+                    "versus a genuine comparison. Then give the verbatim "
+                    "source ID in plain text. Do not reproduce instruction "
+                    "labels or square-bracket placeholders. Abstain if unsure."
                 ),
                 "abstention": "ABSTAIN: insufficient source support",
             }
