@@ -37,6 +37,14 @@ LESSON_GUIDANCE = {
         "Inventor must produce one concrete, interrogative research question "
         "with an exact retrieved record ID, or abstain explicitly."
     ),
+    "non_falsifiable_catalogue_question": (
+        "Do not produce an encyclopedic list of applications. Propose a "
+        "single falsifiable comparison with one specific observed outcome."
+    ),
+    "diffuse_evidence_citations": (
+        "Do not append the entire bibliography as evidence. Use at most "
+        "three directly relevant identifiers; state why each matters."
+    ),
 }
 ROLE_TASKS = {
     "Scout": "Identify the strongest traceable records and missing coverage.",
@@ -211,6 +219,8 @@ def discuss(query, papers, base_council, infer, memory=None, rounds=ROUNDS):
                     "unsupported_cross_topic_bridge",
                     "topic_not_supported_by_retrieved_records",
                     "no_explicit_testable_question",
+                    "non_falsifiable_catalogue_question",
+                    "diffuse_evidence_citations",
                 ):
                     if code in scientific_screen["reason_codes"] and code not in issues:
                         issues.append(code)
