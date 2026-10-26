@@ -33,7 +33,7 @@ PYTHONPATH=src python -m bioreason 'example query' --input examples/papers.json
 PYTHONPATH=src python -m unittest discover -s tests -v
 ```
 
-The online command requires Europe PMC access. Offline fixtures and unit tests require no network. The repository currently has **66 offline tests**, including biomedical cross-topic regression tests, source/DOI checks, eight-role inference-adapter coverage, discussion chaining, and safe memory replay; GitHub Actions has executed the Python 3.10–3.13 test matrix successfully. Passing software tests does **not** establish scientific accuracy.
+The online command requires Europe PMC access. Offline fixtures and unit tests require no network. The repository currently has **69 offline tests**, including biomedical cross-topic regression tests, source/DOI checks, eight-role inference-adapter coverage, discussion chaining, and safe memory replay; GitHub Actions has executed the Python 3.10–3.13 test matrix successfully. Passing software tests does **not** establish scientific accuracy.
 
 Input: JSON array of objects with `title`, `id`, `source`, `doi`, optionally `year`. Output: JSON printed to stdout. Example records are synthetic.
 
@@ -117,6 +117,21 @@ Critic objections and source failures. **The code never attaches citations
 automatically to a model's prose**, and scientific validation is not claimed.
 Software tests verify the handoffs; live-model improvement remains an
 experimental question.
+
+## Valid abstention when source support is insufficient
+
+Professional research behavior sometimes means **not proposing a hypothesis**.
+The source gate now treats the exact response `ABSTAIN: insufficient evidence`
+(or a small set of equivalent unambiguous phrases) as an explicit abstention.
+Inventor is not penalized for lacking a citation when it makes no research
+claim. Abstentions are separately reported and are never considered
+scientifically validated or publishable research conclusions. Any response
+that mixes an abstention with an unsupported DOI or a new factual claim
+still goes through the normal gate.
+
+[69 offline tests and ten synthetic regression cases](https://github.com/AMMARICA1791/bioreason/actions/runs/40319788740)
+verify this behavior and the revised critique handoff on four Python
+versions. The updated real-model performance is evaluated separately.
 
 ## Evidence and provenance
 
