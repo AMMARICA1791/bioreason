@@ -1,13 +1,9 @@
 name: BioReason open science model council
 
 on:
-  push:
-    paths:
-      - '.github/workflows/open-science-council.yml'
-      - 'scripts/science_model_council.py'
-      - 'src/bioreason/multidomain.py'
-      - 'tests/test_science_model_council.py'
   workflow_dispatch:
+  schedule:
+    - cron: '53 6 * * 2'
 
 permissions:
   contents: read
