@@ -10,6 +10,13 @@ import urllib.parse
 import urllib.request
 
 
+class _NoRedirect(urllib.request.HTTPRedirectHandler):
+    """Never forward a model request or its Authorization header to a redirect."""
+
+    def redirect_request(self, request, fp, code, msg, headers, newurl):
+        return None
+
+
 class ModelError(RuntimeError):
     pass
 
@@ -55,7 +62,8 @@ def ask_model(role, evidence, *, endpoint=None, model=None, api_key=None, timeou
         headers["Authorization"] = "Bearer " + api_key
     request = urllib.request.Request(endpoint, data=body, headers=headers, method="POST")
     try:
-        with urllib.request.urlopen(request, timeout=timeout) as response:
+        opener = urllib.request.build_opener(_NoRedirect)
+        with opener.open(request, timeout=timeout) as response:
             result = json.load(response)
         output = result["choices"][0]["message"]["content"]
         if not isinstance(output, str) or not output.strip():
