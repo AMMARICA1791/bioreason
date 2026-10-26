@@ -157,6 +157,16 @@ def review_question(text, records):
     if not isinstance(text, str) or not isinstance(records, list):
         raise TypeError("Expected question text and real records")
     identifiers = {paper["doi"]: paper for paper in records}
+    # Responsible abstention is an explicit outcome, not a failed discovery.
+    if re.fullmatch(r"\s*ABSTAIN:\s*insufficient evidence\.?\s*",
+                    text, flags=re.IGNORECASE):
+        return {
+            "decision": "abstained_insufficient_evidence",
+            "reason_codes": [], "recognized_dois": [],
+            "cited_domains": [], "cross_domain_sources": False,
+            "link_between_domains_established": False,
+            "originality_checked": False, "scientific_validation": False,
+        }
     # Preserve the DOI interior and discard only sentence / Markdown suffixes.
     raw_citations = re.findall(r"\b10\.\d{4,9}/[^\s<>\"]+", text.lower())
     cited = sorted({
