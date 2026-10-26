@@ -121,6 +121,12 @@ class MultidomainTests(unittest.TestCase):
         self.assertFalse(r["link_between_domains_established"])
         self.assertFalse(r["scientific_validation"])
 
+    def test_explicit_abstention_is_responsible_not_a_discovery(self):
+        out = review_question("ABSTAIN: insufficient evidence", [])
+        self.assertEqual(out["decision"], "abstained_insufficient_evidence")
+        self.assertEqual(out["recognized_dois"], [])
+        self.assertFalse(out["scientific_validation"])
+
     def test_invented_doi_holds_proposal(self):
         records = [{"doi": "10.1000/perov.2026", "domain": "materials"}]
         r = review_question("Can 10.1000/nonexistent improve sensitivity?", records)
