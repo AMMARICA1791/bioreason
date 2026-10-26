@@ -97,8 +97,78 @@ class DeliberationTests(unittest.TestCase):
             save_memory(path, sanitized)
             self.assertEqual(load_memory(path), sanitized)
             self.assertEqual(set(LESSON_GUIDANCE), {
-                "missing_source_anchor", "unknown_doi", "unchanged_revision"
+                "missing_source_anchor", "unknown_doi", "unchanged_revision",
+                "unsupported_cross_topic_bridge",
+                "topic_not_supported_by_retrieved_records",
             })
+
+    def test_incoherent_bridge_blocked_and_critic_informed(self):
+        papers = [
+            {"title": "Deep learning in cervical cancer diagnosis",
+             "id": "PMC13650561", "source": "PMC"},
+            {"title": "Glaucoma classification from retinal fundus images",
+             "id": "PMC13639773", "source": "PMC"},
+        ]
+        base = run_council("medical imaging", papers)
+        seen = []
+
+        def infer(role, evidence):
+            seen.append((role, evidence))
+            if role == "Inventor":
+                return {
+                    "role": role,
+                    "candidate": (
+                        "Can glaucoma retinal images improve cervical cancer "
+                        "diagnosis? PMC13650561 PMC13639773"
+                    ),
+                }
+            return {"role": role, "candidate": "No independently established link."}
+
+        result = discuss("medical imaging", papers, base, infer, rounds=1)
+        inventor = result["turns"][2]
+        self.assertEqual(inventor["status"], "held_pending_evidence")
+        self.assertIn(
+            "unsupported_cross_topic_bridge",
+            inventor["scientific_screen"]["reason_codes"],
+        )
+        self.assertIn(
+            "unsupported_cross_topic_bridge",
+            result["memory_after"]["lessons"][-1]["code"],
+        )
+        self.assertEqual(result["publication_gate"], "hold_for_independent_review")
+        self.assertIsNone(result["final_tentative_candidate"])
+        self.assertEqual(
+            seen[3][1]["latest_inventor_screen"]["decision"],
+            "hold_for_independent_review",
+        )
+        self.assertTrue(verify_chain(result["messages"]))
+
+    def test_real_revision_lifts_bridge_hold_but_not_scientific_validation(self):
+        papers = [
+            {"title": "Deep learning in cervical cancer diagnosis",
+             "id": "PMC13650561", "source": "PMC"},
+            {"title": "Glaucoma classification from retinal fundus images",
+             "id": "PMC13639773", "source": "PMC"},
+        ]
+        base = run_council("medical imaging", papers)
+
+        def infer(role, evidence):
+            if role == "Inventor":
+                if evidence["round"] == 1:
+                    return {"role": role, "candidate":
+                        "Glaucoma images predict cervical cancer PMC13650561 PMC13639773"}
+                return {"role": role, "candidate":
+                    "Could cervical cancer detection be studied using deep learning? PMC13650561"}
+            return {"role": role, "candidate": "Tentative discussion and uncertainty."}
+
+        result = discuss("medical imaging", papers, base, infer, rounds=2)
+        self.assertEqual(
+            [r["scientific_screen"]["decision"] for r in result["candidate_reviews"]],
+            ["hold_for_independent_review", "tentative_only"],
+        )
+        self.assertEqual(result["publication_gate"], "tentative_review_only")
+        self.assertFalse(result["scientific_validation"])
+        self.assertTrue(verify_chain(result["messages"]))
 
     def test_bad_council_and_invalid_rounds_rejected(self):
         broken = dict(self.base, audit_passed=False)
