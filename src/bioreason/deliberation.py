@@ -50,6 +50,10 @@ LESSON_GUIDANCE = {
         "The Critic must identify at least one specific failure exposed by "
         "the evidence gate; paraphrasing the Inventor is not a review."
     ),
+    "unresolved_template_placeholders": (
+        "Never copy example placeholders from instructions into research output. "
+        "Use actual paper facts and exact source identifiers or abstain."
+    ),
 }
 ROLE_TASKS = {
     "Scout": "Identify the strongest traceable records and missing coverage.",
@@ -292,6 +296,7 @@ def discuss(query, papers, base_council, infer, memory=None, rounds=ROUNDS):
                     "no_explicit_testable_question",
                     "non_falsifiable_catalogue_question",
                     "diffuse_evidence_citations",
+                    "unresolved_template_placeholders",
                 ):
                     if code in scientific_screen["reason_codes"] and code not in issues:
                         issues.append(code)
