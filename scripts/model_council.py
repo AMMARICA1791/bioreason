@@ -1,6 +1,6 @@
 """Run the eight-role BioReason council on live biomedical records with local inference.
 
-Analyst, Inventor, and Critic use a real, openly licensed local model.
+Each of the eight roles receives an actual local model inference turn.
 Other council roles remain deterministic; outputs are unvalidated research leads.
 A live literature outage fails visibly rather than masquerading as live evidence.
 """
@@ -10,10 +10,10 @@ from datetime import datetime, timezone
 from unittest.mock import patch
 
 from bioreason.core import fetch
-from bioreason.council import run_council, verify_chain
+from bioreason.council import MODEL_ROLES, run_council, verify_chain
 
 MODEL_ID = "Qwen/Qwen2.5-0.5B-Instruct"
-ROLES = ("Analyst", "Inventor", "Critic")
+ROLES = MODEL_ROLES
 QUERY = "OPEN_ACCESS:y AND FIRST_PDATE:[2026-01-01 TO 2026-12-31] AND (AI OR machine learning)"
 OUTPUT = pathlib.Path("artifacts/model-council.json")
 
@@ -81,7 +81,8 @@ def main():
     assert calls == list(ROLES), "Model inference did not run for all three roles"
     assert verify_chain(result["messages"]), "Broken council message chain"
     assert len(result["results"]) == 8 and result["audit_passed"]
-    assert set(result["results"]["Builder"]["model_candidates"]) == set(ROLES)
+    assert set(result["results"]["Builder"]["model_candidates"]) == {"Analyst", "Inventor", "Critic"}
+    assert all("model_suggestion" in result["results"][role] for role in ROLES)
     assert result["results"]["Validator"]["verified_findings"] == 0
 
     OUTPUT.parent.mkdir(exist_ok=True)
@@ -96,7 +97,7 @@ def main():
         "council": result,
     }, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     print("PASS: live Europe PMC records:", len(papers), flush=True)
-    print("PASS: actual local model generated outputs for", ", ".join(calls), flush=True)
+    print("PASS: actual local model generated outputs for all eight roles:", ", ".join(calls), flush=True)
     print("PASS: eight-role council, verified handoff chain; findings unvalidated", flush=True)
 
 
