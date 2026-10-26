@@ -1,0 +1,35 @@
+name: BioReason council cycle
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '17 */6 * * *'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: bioreason-council-cycle
+  cancel-in-progress: false
+
+jobs:
+  council:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Test the council and model adapter
+        run: PYTHONPATH=src python -m unittest discover -s tests -v
+      - name: Execute all eight agents and verify the handoff chain
+        run: PYTHONPATH=src python scripts/smoke_council.py
+      - name: Archive execution evidence even if tests fail
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bioreason-council-evidence
+          path: artifacts/
+          if-no-files-found: warn
+          retention-days: 30
