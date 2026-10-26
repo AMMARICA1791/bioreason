@@ -1,0 +1,38 @@
+name: BioReason real model council proof
+
+on:
+  push:
+    paths:
+      - '.github/workflows/model-council.yml'
+      - 'scripts/model_council.py'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  model-council:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install free CPU inference runtime
+        run: |
+          python -m pip install --disable-pip-version-check torch --index-url https://download.pytorch.org/whl/cpu
+          python -m pip install --disable-pip-version-check 'transformers>=4.45,<5' 'safetensors>=0.4'
+      - name: Run real local model and eight-role council
+        env:
+          HF_HUB_DISABLE_TELEMETRY: '1'
+          TOKENIZERS_PARALLELISM: 'false'
+        run: PYTHONPATH=src python scripts/model_council.py
+      - name: Preserve model outputs and council evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: real-model-council-evidence
+          path: artifacts/model-council.json
+          if-no-files-found: warn
+          retention-days: 30
