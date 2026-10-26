@@ -33,7 +33,7 @@ PYTHONPATH=src python -m bioreason 'example query' --input examples/papers.json
 PYTHONPATH=src python -m unittest discover -s tests -v
 ```
 
-The online command requires Europe PMC access. Offline fixtures and unit tests require no network. The repository currently has **39 offline tests**, including biomedical cross-topic regression tests, source/DOI checks, eight-role inference-adapter coverage, discussion chaining, and safe memory replay; GitHub Actions has executed the Python 3.10–3.13 test matrix successfully. Passing software tests does **not** establish scientific accuracy.
+The online command requires Europe PMC access. Offline fixtures and unit tests require no network. The repository currently has **40 offline tests**, including biomedical cross-topic regression tests, source/DOI checks, eight-role inference-adapter coverage, discussion chaining, and safe memory replay; GitHub Actions has executed the Python 3.10–3.13 test matrix successfully. Passing software tests does **not** establish scientific accuracy.
 
 Input: JSON array of objects with `title`, `id`, `source`, `doi`, optionally `year`. Output: JSON printed to stdout. Example records are synthetic.
 
@@ -52,7 +52,7 @@ to every Inventor reply, passes blocking reasons to reviewers, and holds
 unsupported links for human scientific assessment. Europe PMC core records
 provide bounded abstract excerpts where available. A set of ten synthetic
 positive/negative regression cases exercises both the false-release and
-over-hold paths; this is **not** a measure of clinical accuracy.
+over-hold paths (10/10 cases passed in [GitHub Actions](https://github.com/AMMARICA1791/bioreason/actions/runs/40263193884)); this is **not** a measure of clinical accuracy.
 
 See [Scientific Quality Gate](SCIENTIFIC_QUALITY_GATE.md) for scope,
 limitations, counterexamples, and the future blinded benchmark.
