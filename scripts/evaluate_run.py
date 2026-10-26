@@ -27,6 +27,8 @@ def check_run(data):
     )
     if expected != data["solo_vs_council"]:
         raise ValueError("Saved comparison does not match original text and source data")
+    if data.get("selected_for_independent_human_review") != expected["selection"]:
+        raise ValueError("Review lead selection does not match signed model evidence")
     calls = data["model_calls"]
     expected_calls = ["Inventor"] + list(MODEL_ROLES) * (1 + dialogue["rounds"])
     if calls != expected_calls:
@@ -64,6 +66,9 @@ def check_run(data):
         "solo_to_last_delta": outcomes["solo_to_last_proxy_delta"],
         "first_to_last_delta": outcomes["first_to_last_proxy_delta"],
         "final_gate": outcomes["last_scientific_gate"],
+        "review_lead_source": expected["selection"]["source"],
+        "review_lead_status": expected["selection"]["status"],
+        "review_lead_proxy_score": expected["selection"]["proxy_score"],
         "critic_turns": len(critic_turns),
         "critic_explicit_objections": explicit_challenges,
         "critic_failed_challenge": failed_challenges,
@@ -89,6 +94,8 @@ def main():
     print("Council first proxy:", report["council_first_proxy_score"])
     print("Council last proxy:", report["council_last_proxy_score"])
     print("SOLO-COUNCIL PROXY IMPROVEMENT:", report["proxy_improvement_observed_in_one_run"])
+    print("REVIEW LEAD RETAINED:", report["review_lead_source"],
+          "status:", report["review_lead_status"])
     print("CRITIC AUDIT:", report["critic_explicit_objections"], "explicit objections,",
           report["critic_failed_challenge"], "failed challenges,",
           report["critic_unaudited_turns"], "not audited")
