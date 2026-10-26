@@ -61,10 +61,10 @@ class Council:
         self.send("Scout", "Analyst", "records", {"count": len(papers)})
 
         self.results["Analyst"] = analyst(papers)
-        self.send("Analyst", "Inventor", "title_terms", self.results["Analyst"])
-        self.results["Inventor"] = inventor(self.results["Analyst"])
         if "Analyst" in self.model_roles:
             self.results["Analyst"]["model_suggestion"] = ask_model("Analyst", {"query": query, "papers": papers})
+        self.send("Analyst", "Inventor", "title_terms", self.results["Analyst"])
+        self.results["Inventor"] = inventor(self.results["Analyst"])
         if "Inventor" in self.model_roles:
             self.results["Inventor"]["model_suggestion"] = ask_model("Inventor", {"query": query, "analysis": self.results["Analyst"]})
         self.send("Inventor", "Critic", "candidate", self.results["Inventor"])
