@@ -135,6 +135,40 @@ class ScientificGateTests(unittest.TestCase):
         self.assertEqual(result["decision"], "hold_for_independent_review")
         self.assertIn("no_explicit_testable_question", result["reason_codes"])
 
+    def test_real_hybrid_inventor_doi_in_brackets_is_valid(self):
+        # This exactly reproduces the DOI wrapper from model run 40327497545;
+        # the previous DOI parser erroneously included the closing ']'.
+        papers = [{
+            "id": "42380812",
+            "source": "MED",
+            "doi": "10.1186/s12885-026-16427-y",
+            "title": "Artificial intelligence for cervical cancer screening "
+                     "and diagnosis using Pap smear images: a systematic review.",
+        }]
+        question = (
+            "Question: How does the artificial intelligence (AI) algorithm "
+            "described in [DOI: 10.1186/s12885-026-16427-y] perform compared "
+            "to traditional Pap smear analysis in terms of detecting cervical "
+            "cancer at its earliest stages? Source ID: 42380812"
+        )
+        screen = assess_candidate(question, papers)
+        self.assertEqual(screen["decision"], "tentative_only")
+        self.assertNotIn("doi_not_in_retrieved_records", screen["reason_codes"])
+        self.assertFalse(screen["scientific_validation"])
+
+    def test_bracket_wrapped_fabricated_doi_remains_blocked(self):
+        papers = [{
+            "id": "42380812", "source": "MED",
+            "doi": "10.1186/s12885-026-16427-y",
+            "title": "Cervical cancer screening",
+        }]
+        screen = assess_candidate(
+            "Could cervical cancer screening improve? Source 42380812 "
+            "[DOI: 10.1186/s12885-026-fabricated]", papers
+        )
+        self.assertEqual(screen["decision"], "hold_for_independent_review")
+        self.assertIn("doi_not_in_retrieved_records", screen["reason_codes"])
+
     def test_fabricated_doi_blocks_candidate_despite_real_id(self):
         result = assess_candidate(
             "Can cervical cancer diagnosis improve? PMC13650561 DOI 10.9999/fiction",
