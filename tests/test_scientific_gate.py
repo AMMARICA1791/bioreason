@@ -156,6 +156,51 @@ class ScientificGateTests(unittest.TestCase):
         self.assertNotIn("doi_not_in_retrieved_records", screen["reason_codes"])
         self.assertFalse(screen["scientific_validation"])
 
+    def test_real_doi_must_match_same_real_source_identifier(self):
+        papers = [
+            {"id": "42380812", "source": "MED",
+             "doi": "10.1186/s12885-026-16427-y",
+             "title": "AI cervical cancer screening with Pap smears"},
+            {"id": "42802541", "source": "MED",
+             "doi": "10.1002/jmrs.70127",
+             "title": "Cervical cancer MRI segmentation review"},
+        ]
+        # Both DOI and ID exist but refer to DIFFERENT publications.
+        mismatched = (
+            "Could cervical cancer detection sensitivity improve versus a "
+            "manual reader? Source ID: 42380812 "
+            "[DOI: 10.1002/jmrs.70127]"
+        )
+        screen = assess_candidate(mismatched, papers)
+        self.assertEqual(screen["decision"], "hold_for_independent_review")
+        self.assertIn("doi_record_id_mismatch", screen["reason_codes"])
+        self.assertNotIn("doi_not_in_retrieved_records", screen["reason_codes"])
+        self.assertFalse(screen["scientific_validation"])
+
+        correctly_linked = mismatched.replace("10.1002/jmrs.70127",
+                                             "10.1186/s12885-026-16427-y")
+        valid = assess_candidate(correctly_linked, papers)
+        self.assertEqual(valid["decision"], "tentative_only")
+        self.assertNotIn("doi_record_id_mismatch", valid["reason_codes"])
+
+    def test_multiple_correctly_paired_citations_are_not_blocked(self):
+        papers = [
+            {"id": "42380812", "source": "MED",
+             "doi": "10.1186/s12885-026-16427-y",
+             "title": "AI cervical cancer screening with Pap smears"},
+            {"id": "42802541", "source": "MED",
+             "doi": "10.1002/jmrs.70127",
+             "title": "Cervical cancer MRI segmentation review"},
+        ]
+        proposal = (
+            "Could cervical cancer detection rates improve versus manual "
+            "screening? 42380812 [DOI: 10.1186/s12885-026-16427-y] "
+            "and 42802541 [DOI: 10.1002/jmrs.70127]"
+        )
+        result = assess_candidate(proposal, papers)
+        self.assertEqual(result["decision"], "tentative_only")
+        self.assertNotIn("doi_record_id_mismatch", result["reason_codes"])
+
     def test_bracket_wrapped_fabricated_doi_remains_blocked(self):
         papers = [{
             "id": "42380812", "source": "MED",
