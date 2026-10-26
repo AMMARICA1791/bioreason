@@ -60,13 +60,18 @@ the endpoint regex was also corrected to recognize the plural
 remain unchanged; recalculated scores are separately marked **posthoc**.
 
 The **candidate-selection policy** is a later engineering safety measure,
-not part of the originally preregistered experiment: retain an independently
-screened solo candidate for *human review* if the council is held or scores no
-higher. Promote a council response only if it passes evidence screening and
-exceeds a screened solo baseline's proxy score, or if the solo response fails
-the gate. If both fail, retain **no** lead. A tied score favors solo to avoid
-unproven added computational costs. This rule never changes the original
-experimental outcome or asserts clinical value.
+not part of the originally preregistered experiment. After a recorded real
+failure where the second Inventor turn lost its source citation, the policy was
+extended to compare **solo, council-first and council-final** answers.
+Retain the highest-scoring tentative candidate **only if it passes the
+independent source gate**; resolve equal scores in favor of the earliest
+eligible answer (solo, then first, then final). If none passes, retain
+**no** research lead. This means an inferior second-round rewrite cannot
+erase an earlier stronger proposal. Each preserved candidate requires
+independent human scientific review and is not published as a finding.
+
+The rule is a posthoc non-regression safeguard: it never changes original
+experimental scores or establishes clinical value.
 
 Replayed actual-model transcripts are frozen as regression examples in
 `tests/test_comparison.py`. Their existence must not be confused with
