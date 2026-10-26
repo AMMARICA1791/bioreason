@@ -86,6 +86,19 @@ An abstention can be safer than a fabricated connection, but withholding two pro
 
 **No scientific improvement is established by these tests.** A paired, actual-model run must separately report whether the revised council proposal improves on the solo answer and the first-round council answer.
 
+## First actual Qwen solo-versus-council experiment: negative result
+
+- **Run:** [40316126789](https://github.com/AMMARICA1791/bioreason/actions/runs/40316126789) — completed successfully on 2026-10-26 UTC.
+- **Data:** the same nine real, focused Europe PMC cervical-cancer AI papers and the same Qwen 0.5B model for all candidates.
+- **Generation:** one solo Inventor response and 24 council inference turns; comparison integrity check passed.
+- **Proposals:** the solo model asked whether AI screening and diagnostic algorithms could improve diagnostic accuracy compared with traditional methods. The first and last council Inventor proposals instead asked whether deep learning on Pap smear images could improve cervical cancer screening accuracy; the second proposal was essentially unchanged.
+- **Evidence problem:** none of the three candidate texts cited an exact provided record ID, so all three were `hold_for_independent_review`.
+- **Recorded proxy metric:** solo `4/6`, first council `3/6`, final council `3/6`; solo-to-final difference `-1`. Therefore **no council advantage was observed**.
+- **Metric defect discovered during review:** the initial proxy implementation awarded a topic-grounding point when any retrieved record matched the subject, even if the answer did not cite it. This violated the written criterion. The code was corrected to require the cited ID itself to cover the topic. Re-evaluation of these exact three texts produces **solo `3/6`, council first `2/6`, council final `2/6`**, preserving the negative `-1` difference. [The corrected implementation and 58 offline tests](https://github.com/AMMARICA1791/bioreason/actions/runs/40317199847) were confirmed successful.
+- **Archived source evidence:** [original full model and comparison artifact 12646753546](https://github.com/AMMARICA1791/bioreason/actions/runs/40316126789/artifacts/12646753546). The original run artifact is retained **without alteration**; this disclosure explicitly documents the subsequent scorer correction.
+
+This **negative first measurement** cannot be treated as a general proof of council inferiority, just as an isolated positive score would not establish scientific usefulness. Neither the solo nor council generated independently validated scientific conclusions. The missing Critic-to-Inventor handoff was subsequently repaired in code and tested, but a later **real model experiment** is necessary to determine whether that correction improves outcomes.
+
 ## Earlier independent proof
 
 The preceding [run 40258295368](https://github.com/AMMARICA1791/bioreason/actions/runs/40258295368) proved live retrieval of 10 Europe PMC records and actual model output for Analyst, Inventor, and Critic before the eight-role extension.
