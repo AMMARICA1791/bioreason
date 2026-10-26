@@ -67,6 +67,14 @@ This establishes **cross-run persistence and successful retrieval** of an allowl
 
 An abstention can be safer than a fabricated connection, but withholding two proposals **does not demonstrate that a scientific hypothesis was successfully repaired**. The 10 synthetic cases are regression checks, not blinded biomedical expertise or general clinical accuracy.
 
+## Focused-source quality experiment (2026-10-26)
+
+- **Problem observed:** [live council run 40263193759](https://github.com/AMMARICA1791/bioreason/actions/runs/40263193759) completed technically, but both Inventor turns were held for `unassessed_biomedical_topics`. Inspection of the saved discussion showed a broad catalogue question — "What are some applications of AI and machine learning in healthcare?" — with an indiscriminate list of ten real study identifiers, not a testable hypothesis.
+- **Source correction:** [focused verification run 40314598414](https://github.com/AMMARICA1791/bioreason/actions/runs/40314598414) successfully collected **nine** distinct, traceable papers centered on cervical cancer research and AI, using live Europe PMC, with a controlled date-window extension only when necessary. Full bibliography archived as a workflow artifact.
+- **Scientific-quality correction:** the screening gate now holds non-falsifiable catalogue questions and proposals that cite more than three disparate source records. The reference regression cases still distinguish candidate questions from unsupported inter-disease bridges.
+- **Engineering proof:** [Python tests 40314464085](https://github.com/AMMARICA1791/bioreason/actions/runs/40314464085) succeeded on Python 3.10–3.13 with **46 tests**. The ten existing synthetic scientific regression cases remain successful.
+- **Crucial limit:** real Qwen performance on the **new focused corpus** was not yet confirmed at the time these corrections were made. Passing tests and retrieving coherent records are not proof of scientific hypothesis quality.
+
 ## Earlier independent proof
 
 The preceding [run 40258295368](https://github.com/AMMARICA1791/bioreason/actions/runs/40258295368) proved live retrieval of 10 Europe PMC records and actual model output for Analyst, Inventor, and Critic before the eight-role extension.
