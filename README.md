@@ -21,11 +21,11 @@ Biomedical literature is dispersed across publications and databases. BioReason 
 | Auditor | Records that limitations were reported |
 | Coordinator | Combines results into JSON |
 
-**Architecture disclosure:** The default CLI now executes eight bounded, deterministic software-agent roles with explicit, hash-linked message handoffs, an audit result, and tamper-detection tests. **These are not independently reasoning LLM agents**. No autonomous self-learning, experimentation, continuous background execution, or scientific verification is implemented.
+**Architecture disclosure:** The default CLI executes eight bounded deterministic agent roles with hash-linked handoffs and an explicit audit. An opt-in GitHub Actions workflow can give **each of the eight roles its own inference turn on the same locally loaded Qwen model**, chaining proposals through the council. The roles are not eight separately hosted or trained models. Deterministic validation gates remain in force; model suggestions never establish scientific facts. Scheduled runs are available, but autonomous self-learning, scientific validation, and continuous real-time monitoring are not implemented.
 
 ## Run
 
-Python 3.10+; no runtime third-party dependencies.
+Python 3.10+; deterministic mode has no runtime third-party dependencies. The separate optional local-model workflow installs PyTorch and Transformers on GitHub Actions.
 
 ```bash
 PYTHONPATH=src python -m bioreason 'CRISPR AND cancer' --limit 10
@@ -33,7 +33,7 @@ PYTHONPATH=src python -m bioreason 'example query' --input examples/papers.json
 PYTHONPATH=src python -m unittest discover -s tests -v
 ```
 
-The online command requires Europe PMC access. Offline fixtures and unit tests require no network. The repository defines **sixteen offline unit tests**. A prior local prototype passed five tests; the published six-test suite has not yet been independently verified in GitHub Actions. Passing software tests would not establish scientific accuracy.
+The online command requires Europe PMC access. Offline fixtures and unit tests require no network. The repository currently has **21 offline tests**, including eight-role inference-adapter coverage; GitHub Actions has executed the Python test matrix successfully. Passing software tests does **not** establish scientific accuracy.
 
 Input: JSON array of objects with `title`, `id`, `source`, `doi`, optionally `year`. Output: JSON printed to stdout. Example records are synthetic.
 
@@ -74,9 +74,9 @@ These are background references, **not BioReason experimental results**. Bibliog
 
 ## Status and governance
 
-**Implemented:** Europe PMC metadata retrieval, offline JSON input, executable deterministic eight-role council, hash-linked message trace, audit checks, unit tests.
+**Implemented:** Europe PMC metadata retrieval, offline JSON input, executable eight-role deterministic council, hash-linked message trace, audit checks, unit tests, and scheduled GitHub Actions runs. A separate CPU workflow runs an openly available local Qwen model and archives the model outputs alongside the handoff record. [Verified live-data + three model-backed roles run](https://github.com/AMMARICA1791/bioreason/actions/runs/40258295368).
 
-**Optional model-backed reasoning:** Analyst, Inventor and Critic can call an explicitly configured OpenAI-compatible chat-completions endpoint. This is **opt-in** and unverified model output; no API keys or model endpoints are bundled. For example, set `BIOREASON_MODEL_ENDPOINT`, `BIOREASON_MODEL_NAME`, and optionally `BIOREASON_MODEL_API_KEY`, then run `PYTHONPATH=src python -m bioreason 'protein folding' --input examples/papers.json --model-roles Analyst,Inventor,Critic`. Only use a trusted endpoint; research metadata will be sent to it. Offline deterministic mode is the default. **Not implemented:** autonomous hosted agents, cross-paper scientific synthesis, live monitoring, full-text verification, hosted service, billing. The `--legacy` CLI flag retains the original flat pipeline. The `--legacy` CLI flag retains the original flat pipeline.
+**Optional model-backed reasoning:** All eight roles support per-role model suggestions through an explicitly configured OpenAI-compatible endpoint. No credentials are bundled; opt-in remote calls require `BIOREASON_MODEL_ENDPOINT`, `BIOREASON_MODEL_NAME`, and optionally `BIOREASON_MODEL_API_KEY`. Send only metadata appropriate for a trusted endpoint. Alternatively, the GitHub Actions [local model council](https://github.com/AMMARICA1791/bioreason/actions/workflows/model-council.yml) uses CPU-only Qwen without a paid API key and attempts real Europe PMC collection. The offline deterministic CLI is the default. **Not implemented:** separately hosted autonomous models, full-text verification, scientific originality/patent review, a product service, billing, or proved commercial usefulness. The `--legacy` flag retains the original flat pipeline.
 
 Research use only. Do not use generated questions for diagnosis, treatment, laboratory safety, or claims of novelty. Contributions should include reproducible cases, citations, and counterexamples.
 
