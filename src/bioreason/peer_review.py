@@ -72,6 +72,24 @@ CRITIQUE_CHALLENGE_WORDS = re.compile(
 )
 
 
+# A review is not made critical merely by including the words "paper" and
+# "not" in unrelated sentences. Require an explicit *source-related*
+# objection within a short span. This still checks phrasing, not science.
+_SOURCE_OBJECT = r"(?:source|citation|reference|record|paper|study|bibliograph|doi|source id)"
+_NEGATIVE = r"(?:missing|absent|unsupported|insufficient|lacks?|without|no|not|must|needs?|requires?|wrong|unrelated|invalid|unverified)"
+SOURCE_OBJECTION = re.compile(
+    rf"\b{_NEGATIVE}\b.{{0,95}}\b{_SOURCE_OBJECT}\b"
+    rf"|\b{_SOURCE_OBJECT}\b.{{0,95}}\b{_NEGATIVE}\b",
+    re.IGNORECASE | re.DOTALL,
+)
+DOI_LINK_OBJECTION = re.compile(
+    r"(?:doi.{0,100}(?:wrong|different|mismatch|conflict|does not match|"
+    r"unrelated|another record|inconsistent)|"
+    r"(?:wrong|different|mismatch|conflict|inconsistent).{0,100}doi)",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
 def make_review_obligations(screen):
     reasons = list(screen.get("reason_codes", []))
     challenges = [CHALLENGES[c] for c in reasons if c in CHALLENGES]
@@ -91,6 +109,16 @@ def assess_critic(critic_text, obligations):
     needs_source = obligations["must_request_direct_source_support"]
     has_source = bool(CRITIQUE_SOURCE_WORDS.search(critic_text))
     has_challenge = bool(CRITIQUE_CHALLENGE_WORDS.search(critic_text))
+    source_challenge = bool(SOURCE_OBJECTION.search(critic_text))
+    link_needed = "doi_record_id_mismatch" in obligations.get("reason_codes", [])
+    link_challenge = bool(DOI_LINK_OBJECTION.search(critic_text))
+    # A DOI/record mismatch needs a *specific* identity objection, not a
+    # generic statement that a paper needs stronger evidence.
+    challenge_is_relevant = (
+        has_challenge
+        and (not needs_source or (has_source and source_challenge))
+        and (not link_needed or link_challenge)
+    )
     if not obligations["specific_challenges"]:
         return {
             "audit": "no_automatic_criticism_required",
@@ -100,10 +128,10 @@ def assess_critic(critic_text, obligations):
         }
     return {
         "audit": (
-            "challenge_explicit" if has_challenge and (not needs_source or has_source)
+            "challenge_explicit" if challenge_is_relevant
             else "critic_failed_to_challenge"
         ),
-        "missing_source_challenge": bool(needs_source and not has_source),
-        "uncritical_paraphrase": not has_challenge,
+        "missing_source_challenge": bool(needs_source and not source_challenge),
+        "uncritical_paraphrase": not challenge_is_relevant,
         "scientific_validation": False,
     }
