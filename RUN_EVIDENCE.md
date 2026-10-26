@@ -34,12 +34,12 @@ The logs contain a non-blocking GitHub Actions Node.js deprecation warning from 
 ## Two-round, eight-role discussion with verified learning signals
 
 - **Workflow:** [Run 40259589474](https://github.com/AMMARICA1791/bioreason/actions/runs/40259589474)
-- **Revision:** \`33f897d7064c4dd1335f56e1bdc3c3937bea8487\`
+- **Revision:** `33f897d7064c4dd1335f56e1bdc3c3937bea8487`
 - **Result:** completed successfully on 2026-10-26 UTC.
 - **Evidence:** 27 offline unit tests passed; 10 genuine Europe PMC metadata records obtained; Qwen performed **24 model inference turns**: eight initial role turns and **16 additional discussion turns in two rounds**.
 - **Discussion trace:** second hash-linked conversation chain verified and archived in [artifact 12624097777](https://github.com/AMMARICA1791/bioreason/actions/runs/40259589474/artifacts/12624097777).
-- **Observed procedural issues:** the deterministic \`missing_source_anchor\` rule flagged four responses in round one and one in round two. This is a within-run change in one citation-related signal, **not** a demonstrated increase in scientific correctness.
-- **Lessons recorded:** \`{"code":"missing_source_anchor","count":5}\`. A copy of the verified initial state is stored in [the corrective-memory seed](.bioreason_state/lessons.json). Subsequent successful scheduled runs are configured to restore, extend and save such lessons via GitHub Actions cache.
+- **Observed procedural issues:** the deterministic `missing_source_anchor` rule flagged four responses in round one and one in round two. This is a within-run change in one citation-related signal, **not** a demonstrated increase in scientific correctness.
+- **Lessons recorded:** `{"code":"missing_source_anchor","count":5}`. A copy of the verified initial state is stored in [the corrective-memory seed](.bioreason_state/lessons.json). Subsequent successful scheduled runs are configured to restore, extend and save such lessons via GitHub Actions cache.
 - **Safety:** model prose is archived as tentative; the reusable memory accepts only predeclared issue codes, never arbitrary model instructions. The model's weights do not change.
 
 This section establishes real peer-message exchange and within-run feedback. **Cross-run cache restoration remains a separate check** until a subsequent workflow log confirms a nonzero restored-cycle count.
