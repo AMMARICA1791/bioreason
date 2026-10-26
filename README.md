@@ -1,12 +1,23 @@
 # BioReason
 
-**Evidence-linked biomedical literature triage — experimental prototype v0.2**
+**Open science research council — evidence-first, multi-disciplinary, experimental**
 
-BioReason is a public, source-available research prototype that turns bibliographic metadata into traceable, explicitly *unvalidated* research questions. It is **not** a scientific discovery engine, a clinical tool, or a validated autonomous multi-agent system.
+BioReason's mission is to **explore scientific research across fields, identify potentially useful connections, propose falsifiable hypotheses, challenge them through an eight-role council, and turn promising questions into testable next steps.** Outputs remain unvalidated research leads. Eight prompts on pretrained local models are not eight independently trained scientific experts.
 
 ## Problem and scope
 
-Biomedical literature is dispersed across publications and databases. BioReason explores a narrow, auditable baseline for literature triage. Multi-agent approaches to scientific research already exist; BioReason does not claim to have invented the approach. Its immediate contribution is a reproducible, deterministic pipeline whose outputs and limitations can be inspected.
+The goal is not to optimize biomedical citation-formatting tests. Biomedical experiments exposed important defects and are now retained as an **evaluation laboratory**, while the science-wide track scouts additional fields using public Crossref journal metadata. New connections must cite actual studies, describe uncertainty, and explicitly separate a hypothetical mechanism from demonstrated evidence. Prior-art originality and scientific effectiveness are **not yet established**.
+
+## Active research tracks
+
+| Track | Source and role | Actual evidence |
+| --- | --- | --- |
+| **Science-wide scouting** (new main research direction) | [Four science fields, live Crossref DOIs, eight audited software roles](.github/workflows/science-scout.yml) | [Verified live run](https://github.com/AMMARICA1791/bioreason/actions/runs/40340168406) |
+| **Science-wide model council** (experimental) | [Real local-model role dialogue, one revision and source gate](.github/workflows/open-science-council.yml) | Model-run artifacts must be inspected before claiming an improved hypothesis |
+| **Biomedical regression laboratory** (retained) | [Europe PMC trials](.github/workflows/model-council.yml), [scientific quality regression cases](evaluation/scientific_regression_cases.json) | Historical positive and negative software tests; **not** the mission's domain limit |
+
+**The current four-field selection is a pilot, not a permanent science whitelist.**
+Reports clearly differentiate retrieving a paper, stating a testable hypothesis, verifying an experiment, and proving originality; none can substitute for another.
 
 ## Implemented pipeline
 
