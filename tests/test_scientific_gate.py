@@ -95,6 +95,20 @@ class ScientificGateTests(unittest.TestCase):
         self.assertIn("diffuse_evidence_citations", result["reason_codes"])
         self.assertEqual(result["decision"], "hold_for_independent_review")
 
+    def test_clean_abstention_is_safe_without_hallucinated_reference(self):
+        result = assess_candidate("ABSTAIN: insufficient evidence", PAPERS)
+        self.assertEqual(result["decision"], "abstained_insufficient_evidence")
+        self.assertEqual(result["cited_record_ids"], [])
+        self.assertFalse(result["scientific_validation"])
+
+    def test_abstention_cannot_hide_fabricated_claims(self):
+        result = assess_candidate(
+            "ABSTAIN: insufficient evidence; but DOI 10.9999/fabricated proves it",
+            PAPERS,
+        )
+        self.assertEqual(result["decision"], "hold_for_independent_review")
+        self.assertIn("doi_not_in_retrieved_records", result["reason_codes"])
+
     def test_inventor_must_ask_an_actual_research_question(self):
         result = assess_candidate(
             "Cervical cancer deep learning is important. PMC13650561", PAPERS
