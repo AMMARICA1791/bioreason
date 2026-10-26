@@ -148,7 +148,8 @@ def discuss(query, papers, base_council, infer, memory=None, rounds=ROUNDS):
     latest_proposal = None
     records = [
         {"id": p.get("id", ""), "doi": p.get("doi", ""),
-         "title": p.get("title", "")[:160]}
+         "title": p.get("title", "")[:160],
+         "abstract_excerpt": p.get("abstract", "")[:180]}
         for p in papers[:10]
     ]
 
