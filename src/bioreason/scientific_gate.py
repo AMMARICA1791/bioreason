@@ -49,6 +49,16 @@ def is_valid_abstention(text):
     return isinstance(text, str) and bool(_VALID_ABSTENTION.fullmatch(text))
 
 
+def normalize_doi(value):
+    """Canonicalize a DOI from prose, not a scientific proof of its claim.
+
+    A DOI in Markdown like [DOI: 10.1186/abc] or **10.1186/abc** should
+    match the identical source DOI. Strip wrapping Markdown and ordinary
+    sentence punctuation; do NOT change the internal DOI path.
+    """
+    return str(value).strip().lower().rstrip(".,;:!?)]}'\"*")
+
+
 def assess_candidate(candidate, records):
     """Return a blocking evidence gate, not a prediction of scientific truth.
 
@@ -131,11 +141,11 @@ def assess_candidate(candidate, records):
     # DOI strings in a proposed claim must be present in the retrieved source
     # metadata. They are not independent proof of the claim even when matched.
     known_dois = {
-        str(p.get("doi", "")).strip().rstrip(".,;)").lower()
+        normalize_doi(p.get("doi", ""))
         for p in records if p.get("doi")
     }
     mentioned_dois = [
-        match.rstrip(".,;)").lower()
+        normalize_doi(match)
         for match in re.findall(r"\b10\.\d{4,9}/[^\s<>\"]+", candidate)
     ]
     if any(doi not in known_dois for doi in mentioned_dois):
