@@ -51,6 +51,10 @@ def main():
         "Analyst": "Compare ONLY claims supported by the given paper titles and abstracts.",
         "Inventor": (
             "Choose a SINGLE source record that concerns the focused disease. "
+            "You MUST include that record\'s exact numeric or PMC identifier "
+            "in your generated reply, or explicitly ABSTAIN. On revision, read "
+            "mandatory_revision_feedback and repair the identified problems "
+            "rather than repeating the previous answer. "
             "Write ONE falsifiable question about a measurable outcome such as "
             "diagnostic sensitivity, specificity or false-positive rate versus "
             "an explicitly named baseline; do not claim a result was established. "
@@ -62,8 +66,13 @@ def main():
             "and never connect two diseases without an explicit joint record."
         ),
         "Critic": (
-            "Challenge the latest Inventor hypothesis. If its scientific screen "
-            "holds the proposal, say BLOCKED and explain the specific evidence gap."
+            "Do NOT paraphrase, polish or approve the Inventor question. "
+            "First state BLOCKED when the gate holds a proposal; identify one "
+            "exact unmet source, citation or testability requirement from "
+            "mandatory_critical_review.specific_challenges. Explain why the "
+            "supplied bibliography does NOT yet establish the proposed outcome. "
+            "If no gate failure, identify one substantive falsification test. "
+            "Your task is independent criticism, not rewriting the proposal."
         ),
         "Validator": "List exactly what each cited source does and does not establish.",
         "Builder": "Propose a small, falsifiable test only for well-sourced tentative ideas.",
