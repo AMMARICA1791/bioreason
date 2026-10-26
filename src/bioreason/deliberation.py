@@ -167,12 +167,63 @@ def discuss(query, papers, base_council, infer, memory=None, rounds=ROUNDS):
 
     for round_number in range(1, rounds + 1):
         for idx, role in enumerate(MODEL_ROLES):
+            # Keep substantive objections available across an entire round.
+            # The rolling four-message context previously dropped Critic's
+            # feedback before Inventor's second turn, preventing revision.
+            previous_critic = next(
+                (turn for turn in reversed(turns) if turn["role"] == "Critic"),
+                None,
+            )
+            previous_validator = next(
+                (turn for turn in reversed(turns) if turn["role"] == "Validator"),
+                None,
+            )
+            revision_feedback = None
+            if role == "Inventor" and round_number > 1 and latest_proposal:
+                # Select a relevant *candidate* record for re-examination,
+                # not an automatically approved citation. The model must
+                # still cite and the independent quality gate must check it.
+                terms = set(re.findall(r"[a-z]{4,}", latest_proposal["text"].lower()))
+                ranked = sorted(
+                    papers,
+                    key=lambda paper: len(
+                        terms & set(re.findall(
+                            r"[a-z]{4,}", paper.get("title", "").lower()
+                        ))
+                    ),
+                    reverse=True,
+                )
+                record = ranked[0] if ranked else None
+                revision_feedback = {
+                    "required_action": (
+                        "Address the prior Critic objection and specific hold "
+                        "reasons. Rewrite a falsifiable question with one exact "
+                        "supporting record ID, or abstain. Do not mechanically "
+                        "append a citation to an unsupported claim."
+                    ),
+                    "previous_gate_decision": latest_proposal["screen"]["decision"],
+                    "specific_hold_reasons": latest_proposal["screen"]["reason_codes"],
+                    "critic_objection": (
+                        previous_critic["response"][:550]
+                        if previous_critic else "No independent critique recorded"
+                    ),
+                    "validator_feedback": (
+                        previous_validator["response"][:330]
+                        if previous_validator else None
+                    ),
+                    "possible_source_to_review_not_automatically_approved": (
+                        {"id": record.get("id"), "title": record.get("title", "")[:160],
+                         "abstract_excerpt": record.get("abstract", "")[:190]}
+                        if record else None
+                    ),
+                }
             recent = [
                 {"role": t["role"], "response": t["response"][:350],
                  "issue_codes": t["issue_codes"]}
                 for t in turns[-4:]
             ]
             evidence = {
+                "mandatory_revision_feedback": revision_feedback,
                 "query": query,
                 "round": round_number,
                 "role_task": ROLE_TASKS[role],
