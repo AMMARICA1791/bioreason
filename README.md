@@ -33,7 +33,7 @@ PYTHONPATH=src python -m bioreason 'example query' --input examples/papers.json
 PYTHONPATH=src python -m unittest discover -s tests -v
 ```
 
-The online command requires Europe PMC access. Offline fixtures and unit tests require no network. The repository defines **eleven offline unit tests**. A prior local prototype passed five tests; the published six-test suite has not yet been independently verified in GitHub Actions. Passing software tests would not establish scientific accuracy.
+The online command requires Europe PMC access. Offline fixtures and unit tests require no network. The repository defines **sixteen offline unit tests**. A prior local prototype passed five tests; the published six-test suite has not yet been independently verified in GitHub Actions. Passing software tests would not establish scientific accuracy.
 
 Input: JSON array of objects with `title`, `id`, `source`, `doi`, optionally `year`. Output: JSON printed to stdout. Example records are synthetic.
 
@@ -76,7 +76,7 @@ These are background references, **not BioReason experimental results**. Bibliog
 
 **Implemented:** Europe PMC metadata retrieval, offline JSON input, executable deterministic eight-role council, hash-linked message trace, audit checks, unit tests.
 
-**Not implemented:** autonomous LLM agents, cross-paper scientific synthesis, live monitoring, full-text verification, hosted service, billing. The `--legacy` CLI flag retains the original flat pipeline.
+**Optional model-backed reasoning:** Analyst, Inventor and Critic can call an explicitly configured OpenAI-compatible chat-completions endpoint. This is **opt-in** and unverified model output; no API keys or model endpoints are bundled. For example, set `BIOREASON_MODEL_ENDPOINT`, `BIOREASON_MODEL_NAME`, and optionally `BIOREASON_MODEL_API_KEY`, then run `PYTHONPATH=src python -m bioreason 'protein folding' --input examples/papers.json --model-roles Analyst,Inventor,Critic`. Only use a trusted endpoint; research metadata will be sent to it. Offline deterministic mode is the default. **Not implemented:** autonomous hosted agents, cross-paper scientific synthesis, live monitoring, full-text verification, hosted service, billing. The `--legacy` CLI flag retains the original flat pipeline. The `--legacy` CLI flag retains the original flat pipeline.
 
 Research use only. Do not use generated questions for diagnosis, treatment, laboratory safety, or claims of novelty. Contributions should include reproducible cases, citations, and counterexamples.
 
