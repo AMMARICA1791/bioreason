@@ -141,6 +141,40 @@ class ComparisonTests(unittest.TestCase):
         self.assertEqual(result["selection"]["source"], "solo")
         self.assertEqual(result["outcomes"]["solo_to_last_proxy_delta"], 0)
 
+    def test_preserve_grounded_first_council_proposal_after_bad_revision(self):
+        solo = "Could cervical cancer screening improve? PMC42"
+        first = (
+            "Could cervical cancer detection sensitivity improve compared "
+            "with standard practice? PMC42"
+        )
+        last = (
+            "Could cervical cancer detection sensitivity improve compared "
+            "with standard practice?"
+        )
+        result = compare_solo_to_council(solo, turns(first, last), PAPERS)
+        self.assertEqual(result["selection"]["source"], "council_first")
+        self.assertEqual(result["selection"]["candidate"], first)
+        self.assertTrue(result["outcomes"]["revision_lost_evidence_quality"])
+        self.assertFalse(result["scientific_validation"])
+
+    def test_grounded_first_round_survives_when_solo_and_revision_both_held(self):
+        held = "Could cervical cancer screening sensitivity improve?"
+        good = (
+            "Could cervical cancer screening sensitivity improve compared "
+            "with standard care? PMC42"
+        )
+        result = compare_solo_to_council(held, turns(good, held), PAPERS)
+        self.assertEqual(result["selection"]["source"], "council_first")
+        self.assertEqual(result["selection"]["candidate"], good)
+        self.assertFalse(result["selection"]["scientific_validation"])
+
+    def test_tied_council_replies_keep_first_to_avoid_spurious_advantage(self):
+        held = "Could cervical cancer detection sensitivity improve?"
+        first = "Could cervical cancer detection sensitivity improve compared with standard care? PMC42"
+        revised = "Can cervical cancer detection sensitivity improve compared with standard care? PMC42"
+        report = compare_solo_to_council(held, turns(first, revised), PAPERS)
+        self.assertEqual(report["selection"]["source"], "council_first")
+
     def test_archived_real_qwen_failure_replays_as_solo_fallback(self):
         # Literal transcripts from run 40320610137, not model simulations.
         paper = [{
