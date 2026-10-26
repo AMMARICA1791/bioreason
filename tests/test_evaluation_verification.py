@@ -40,7 +40,7 @@ def build_evidence():
         "council": base,
         "deliberation": discussion,
         "solo_vs_council": comparison,
-        "selected_for_independent_human_review": comparison["selection"],
+        "selected_for_independent_human_review": copy.deepcopy(comparison["selection"]),
     }
 
 
