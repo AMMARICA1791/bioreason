@@ -44,6 +44,8 @@ jobs:
           HF_HUB_DISABLE_TELEMETRY: '1'
           TOKENIZERS_PARALLELISM: 'false'
         run: PYTHONPATH=src python scripts/model_council.py
+      - name: Independently recompute solo-versus-council comparison
+        run: PYTHONPATH=src python scripts/evaluate_run.py
       - name: Preserve model outputs and council evidence
         if: always()
         uses: actions/upload-artifact@v4
@@ -51,6 +53,7 @@ jobs:
           name: real-model-council-evidence
           path: |
             artifacts/model-council.json
+            artifacts/comparison-verification.json
             .bioreason_state/lessons.json
           if-no-files-found: warn
           include-hidden-files: true
