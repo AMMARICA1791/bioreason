@@ -109,6 +109,25 @@ class ScientificGateTests(unittest.TestCase):
         self.assertEqual(result["decision"], "hold_for_independent_review")
         self.assertIn("doi_not_in_retrieved_records", result["reason_codes"])
 
+    def test_verbatim_square_bracket_template_cannot_pass(self):
+        text = (
+            "Could [specific method] improve [measurable endpoint] versus "
+            "[baseline]? Source: [EXACT paper ID from the given record]"
+        )
+        result = assess_candidate(text, PAPERS)
+        self.assertEqual(result["decision"], "hold_for_independent_review")
+        self.assertIn("unresolved_template_placeholders", result["reason_codes"])
+        self.assertFalse(result["scientific_validation"])
+
+    def test_verbatim_angle_bracket_template_cannot_pass(self):
+        text = (
+            "Could <specific intervention> improve cervical cancer screening "
+            "sensitivity compared with <baseline>? PMC13650561"
+        )
+        result = assess_candidate(text, PAPERS)
+        self.assertEqual(result["decision"], "hold_for_independent_review")
+        self.assertIn("unresolved_template_placeholders", result["reason_codes"])
+
     def test_inventor_must_ask_an_actual_research_question(self):
         result = assess_candidate(
             "Cervical cancer deep learning is important. PMC13650561", PAPERS
