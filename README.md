@@ -33,7 +33,7 @@ PYTHONPATH=src python -m bioreason 'example query' --input examples/papers.json
 PYTHONPATH=src python -m unittest discover -s tests -v
 ```
 
-The online command requires Europe PMC access. Offline fixtures and unit tests require no network. The repository currently has **40 offline tests**, including biomedical cross-topic regression tests, source/DOI checks, eight-role inference-adapter coverage, discussion chaining, and safe memory replay; GitHub Actions has executed the Python 3.10–3.13 test matrix successfully. Passing software tests does **not** establish scientific accuracy.
+The online command requires Europe PMC access. Offline fixtures and unit tests require no network. The repository currently has **46 offline tests**, including biomedical cross-topic regression tests, source/DOI checks, eight-role inference-adapter coverage, discussion chaining, and safe memory replay; GitHub Actions has executed the Python 3.10–3.13 test matrix successfully. Passing software tests does **not** establish scientific accuracy.
 
 Input: JSON array of objects with `title`, `id`, `source`, `doi`, optionally `year`. Output: JSON printed to stdout. Example records are synthetic.
 
@@ -56,6 +56,20 @@ over-hold paths (10/10 cases passed in [GitHub Actions](https://github.com/AMMAR
 
 See [Scientific Quality Gate](SCIENTIFIC_QUALITY_GATE.md) for scope,
 limitations, counterexamples, and the future blinded benchmark.
+
+## Focused literature and falsifiable proposals
+
+The current quality pilot draws a **single coherent biomedical topic** (cervical
+cancer plus AI research) from Europe PMC. If the 2026 date window has too few
+traceable records, the collector extends the date window to 2025–2026 rather
+than combining unrelated medical specialties or inventing evidence.
+
+[Focused-source proof](https://github.com/AMMARICA1791/bioreason/actions/runs/40314598414)
+retrieved **nine relevant live records**. This validates retrieval coherence,
+not scientific causality. The Inventor must pose a narrow research question
+supported by at most three actually supplied source identifiers, or abstain.
+Catalogue-style questions about general AI applications are held by the
+independent quality gate.
 
 ## Evidence and provenance
 
