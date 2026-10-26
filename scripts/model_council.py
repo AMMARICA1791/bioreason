@@ -82,6 +82,49 @@ def main():
 
     def local_inference(role, evidence):
         record_ids = [str(p.get("id")) for p in papers if p.get("id")]
+        # A compact, focused user message makes explicit counterarguments and
+        # exact source IDs salient for a small CPU model. It is used for both
+        # solo and council Inventor calls; none of the source IDs are appended
+        # to the model output by code.
+        if role == "Inventor":
+            feedback = evidence.get("mandatory_revision_feedback") or {}
+            records = evidence.get("records") or []
+            focused = (
+                feedback.get("possible_source_to_review_not_automatically_approved")
+                or (records[0] if records else None)
+            )
+            model_evidence = {
+                "task": "Propose ONE falsifiable, evidence-linked research question",
+                "focus": TOPIC,
+                "round": evidence.get("round"),
+                "paper_for_critical_review": focused,
+                "prior_proposal": evidence.get("previous_own_turn", "")[:300],
+                "prior_gate_failures": feedback.get("specific_hold_reasons", []),
+                "deterministic_source_challenges": (
+                    feedback.get("deterministic_review_challenges", [])
+                ),
+                "actual_critic_objection": feedback.get("critic_objection"),
+                "all_available_ids": record_ids,
+                "remembered_lessons": evidence.get("remembered_corrective_lessons", [])[:3],
+                "required_format": (
+                    "Question: Could [specific method] improve [measurable endpoint] "
+                    "versus [baseline]? Source: [EXACT paper ID from the given record]"
+                ),
+                "abstention": "ABSTAIN: insufficient source support",
+            }
+        elif role == "Critic":
+            model_evidence = {
+                "task": "Independent critical review, never reword the question",
+                "proposal": evidence.get("latest_inventor_proposal"),
+                "mandatory_critical_review": evidence.get("mandatory_critical_review"),
+                "retrieved_records": (evidence.get("records") or [])[:4],
+                "required_action": (
+                    "State BLOCKED and an exact missing evidence requirement "
+                    "when there is a held candidate. Otherwise name a falsification test."
+                ),
+            }
+        else:
+            model_evidence = evidence
         prompt = [
             {"role": "system", "content": (
                 "You are the BioReason " + role + ". Analyze only the supplied "
@@ -94,7 +137,7 @@ def main():
                 + role_instructions[role]
                 + " Exact available source IDs: " + ", ".join(record_ids[:10])
             )},
-            {"role": "user", "content": json.dumps(evidence, ensure_ascii=False)[:5000]},
+            {"role": "user", "content": json.dumps(model_evidence, ensure_ascii=False)[:5000]},
         ]
         formatted = tokenizer.apply_chat_template(
             prompt, tokenize=False, add_generation_prompt=True,
