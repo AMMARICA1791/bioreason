@@ -87,7 +87,7 @@ class EvaluationVerificationTests(unittest.TestCase):
     def test_selected_lead_cannot_be_falsified(self):
         d = build_evidence()
         bad = copy.deepcopy(d)
-        bad["selected_for_independent_human_review"]["source"] = "council_last"
+        bad["selected_for_independent_human_review"]["source"] = "solo"
         with self.assertRaisesRegex(ValueError, "Review lead selection"):
             check_run(bad)
 
