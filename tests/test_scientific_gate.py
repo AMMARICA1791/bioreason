@@ -75,6 +75,14 @@ class ScientificGateTests(unittest.TestCase):
         self.assertIn("unassessed_biomedical_topics", result["reason_codes"])
         self.assertEqual(result["coverage"], "limited phrase-based screen, NOT a medical ontology")
 
+    def test_fabricated_doi_blocks_candidate_despite_real_id(self):
+        result = assess_candidate(
+            "Can cervical cancer diagnosis improve? PMC13650561 DOI 10.9999/fiction",
+            PAPERS,
+        )
+        self.assertIn("doi_not_in_retrieved_records", result["reason_codes"])
+        self.assertEqual(result["decision"], "hold_for_independent_review")
+
     def test_supporting_joint_record_allows_tentative_cross_domain(self):
         bridge_record = {
             "id": "PMC500",
