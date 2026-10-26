@@ -110,6 +110,18 @@ This **negative first measurement** cannot be treated as a general proof of coun
 
 **Limitation:** the full local-model inference cycle using the *post-template* instructions is a distinct experiment. The code and tests prove that invalid copied templates are rejected; they do not establish whether a small model can reliably originate stronger source-grounded questions.
 
+## Actual model regression and no-downgrade review-lead selection (2026-10-26)
+
+- **Verified real-model run:** [40320610137](https://github.com/AMMARICA1791/bioreason/actions/runs/40320610137) completed successfully after prompt-template cleanup, using Qwen2.5-0.5B, nine traceable Europe PMC records, one solo Inventor turn and 24 council turns.
+- **Original output:** the solo model included the legitimate source ID `42380812` in its cervical-cancer screening question. Both the first and revised council Inventor questions **omitted every exact source ID**, even after Critic objections. The two proposals were therefore held under `missing_record_citation`.
+- **Recorded metric at that revision:** solo **5/6**, council-first **2/6**, council-final **2/6**; council-minus-solo **-3**. Critic separately produced two explicit objections, but this did not cause an improved Inventor answer. No scientific improvement is proven.
+- **Subsequent scoring correction:** a plural form, `detection rates`, was wrongly missed by the measurable-endpoint regex. The current rubric recognizes both `detection rate` and `detection rates`. When replaying the **unaltered actual Qwen answers**, this changes the proxy scores to **6/6 solo, 3/6 first council, 3/6 final council**, preserving the negative delta **-3**. [Regression test](tests/test_comparison.py) stores the exact model transcripts and verifies this recalculation. This is a *post-run metric bug correction*, not a newly successful scientific experiment.
+- **Safety correction:** the newly implemented `comparison.selection` policy retains the solo answer as a **tentative human-review-only lead** whenever the final council response is held or does not strictly exceed the solo answer's evidence proxy. It chooses the council only for a better, screened final answer; selects nothing if both are held. It never labels any candidate scientifically validated, automatically publishes a medical conclusion, or rewrites the original council trace.
+- **Integrity:** `scripts/evaluate_run.py` recomputes the selected human-review lead independently from the saved full texts and source set and rejects tampering with the selected source.
+- **Source artifact:** [Full original model dialogue and bibliography](https://github.com/AMMARICA1791/bioreason/actions/runs/40320610137/artifacts/12649466534).
+
+**Interpretation:** The first fully source-linked solo reply outperformed the council under this limited format/evidence rubric. Retaining a better independently screened solo question prevents a loss of review-lead quality; **it does not make the eight-role council scientifically better**. Proper expert-labelled and equal-budget evaluation remains outstanding.
+
 ## Earlier independent proof
 
 The preceding [run 40258295368](https://github.com/AMMARICA1791/bioreason/actions/runs/40258295368) proved live retrieval of 10 Europe PMC records and actual model output for Analyst, Inventor, and Critic before the eight-role extension.
