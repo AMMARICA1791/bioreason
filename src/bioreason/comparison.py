@@ -58,25 +58,25 @@ def compare_solo_to_council(solo, deliberation, papers):
     baseline = evaluate_candidate(solo, papers)
     first = evaluate_candidate(reviews[0]["response"], papers)
     last = evaluate_candidate(reviews[-1]["response"], papers)
-    # Never silently replace a better independently sourced solo lead with
-    # a worse council revision. This is an archival recommendation for HUMAN
-    # review only, not a scientific validation or automatic publication.
-    # If both arms fail evidence screening, produce no selected lead.
-    solo_ok = baseline["screen"]["decision"] == "tentative_only"
-    council_ok = last["screen"]["decision"] == "tentative_only"
-    council_strictly_better = (
-        council_ok and (
-            not solo_ok or last["proxy_score"] > baseline["proxy_score"]
-        )
-    )
-    winner = (
-        "council_last" if council_strictly_better
-        else "solo" if solo_ok
-        else "none"
-    )
-    chosen = last if winner == "council_last" else (
-        baseline if winner == "solo" else None
-    )
+    # Never silently overwrite the best *screened* tentative lead. The final
+    # critique can degrade an initial council question, just as the council
+    # can degrade a strong solo question. Keep the original texts and scores
+    # for audit; this is NOT an automatic scientific result or publication.
+    arms = [
+        ("solo", baseline),
+        ("council_first", first),
+        ("council_last", last),
+    ]
+    eligible = [
+        (index, name, assessment)
+        for index, (name, assessment) in enumerate(arms)
+        if assessment["screen"]["decision"] == "tentative_only"
+    ]
+    # Highest evidence/testability proxy wins; ties keep the earliest
+    # screened proposal so an unsupported rewrite gives no advantage.
+    _, winner, chosen = max(
+        eligible, key=lambda item: (item[2]["proxy_score"], -item[0])
+    ) if eligible else (None, "none", None)
     selection = {
         "source": winner,
         "candidate": chosen["candidate"] if chosen else None,
@@ -86,13 +86,16 @@ def compare_solo_to_council(solo, deliberation, papers):
             else "no_candidate_supported_by_screen"
         ),
         "council_beats_solo_proxy": (
-            council_strictly_better and solo_ok
+            winner in {"council_first", "council_last"}
+            and baseline["screen"]["decision"] == "tentative_only"
+            and chosen["proxy_score"] > baseline["proxy_score"]
         ),
         "scientific_validation": False,
         "rule": (
-            "Council replaces solo only with a tentative screened proposal "
-            "that strictly exceeds solo proxy score, or when solo is held. "
-            "Ties retain solo; if neither passes, return no candidate."
+            "Select highest-scoring evidence-screened tentative lead among "
+            "solo, first and final council proposals. Break proxy-score ties "
+            "in earliest-arm order; if none passes, select no lead. "
+            "No scientific truth, clinical use or publication is approved."
         ),
     }
     return {
@@ -111,6 +114,11 @@ def compare_solo_to_council(solo, deliberation, papers):
             ),
             "first_to_last_proxy_delta": (
                 last["proxy_score"] - first["proxy_score"]
+            ),
+            "revision_lost_evidence_quality": (
+                first["screen"]["decision"] == "tentative_only"
+                and last["screen"]["decision"] != "tentative_only"
+                or last["proxy_score"] < first["proxy_score"]
             ),
             "last_scientific_gate": last["screen"]["decision"],
         },
