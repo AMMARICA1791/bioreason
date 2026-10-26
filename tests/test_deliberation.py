@@ -101,6 +101,8 @@ class DeliberationTests(unittest.TestCase):
                 "unsupported_cross_topic_bridge",
                 "topic_not_supported_by_retrieved_records",
                 "no_explicit_testable_question",
+                "non_falsifiable_catalogue_question",
+                "diffuse_evidence_citations",
             })
 
     def test_incoherent_bridge_blocked_and_critic_informed(self):
