@@ -44,6 +44,16 @@ The logs contain a non-blocking GitHub Actions Node.js deprecation warning from 
 
 This section establishes real peer-message exchange and within-run feedback. **Cross-run cache restoration remains a separate check** until a subsequent workflow log confirms a nonzero restored-cycle count.
 
+## Independently verified cross-run corrective memory
+
+- **Proof workflow:** [Run 40260928759](https://github.com/AMMARICA1791/bioreason/actions/runs/40260928759), **success** on 2026-10-26 UTC.
+- **Exact cache restored:** `bioreason-corrective-memory-v1-40259626692-1`, saved by an earlier successful model-backed council run.
+- **Log proof:** `Cache hit for restore-key`, `Cache restored successfully`, and `PASS: persisted council corrective memory restored from a prior GitHub Actions run`.
+- **State read:** `completed_cycles: 1`; issue code `missing_source_anchor` was present.
+- **Evidence artifact:** [persisted-council-memory-proof, artifact 12623982891](https://github.com/AMMARICA1791/bioreason/actions/runs/40260928759/artifacts/12623982891).
+
+This establishes **cross-run persistence and successful retrieval** of an allowlisted corrective lesson without manual transfer. It does **not** establish model-weight learning, independent long-term scientific improvement, or that GitHub's cache will never expire.
+
 ## Earlier independent proof
 
 The preceding [run 40258295368](https://github.com/AMMARICA1791/bioreason/actions/runs/40258295368) proved live retrieval of 10 Europe PMC records and actual model output for Analyst, Inventor, and Critic before the eight-role extension.
