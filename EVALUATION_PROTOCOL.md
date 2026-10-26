@@ -49,6 +49,29 @@ comparator, or the final evidence gate holds it. All results are published;
 a negative finding is not retried with a different sample and reported as
 if it were the original. Machine success is still **not** scientific success.
 
+## Post-run corrections and no-regression rule (NOT preregistered)
+
+After inspecting the first real solo-versus-council transcripts, the metric
+implementation was corrected to require that the supposedly supporting paper
+was **actually cited** by the candidate (not merely present in the corpus).
+After inspecting [run 40320610137](https://github.com/AMMARICA1791/bioreason/actions/runs/40320610137),
+the endpoint regex was also corrected to recognize the plural
+`detection rates`. All original run artifacts and historical metric scores
+remain unchanged; recalculated scores are separately marked **posthoc**.
+
+The **candidate-selection policy** is a later engineering safety measure,
+not part of the originally preregistered experiment: retain an independently
+screened solo candidate for *human review* if the council is held or scores no
+higher. Promote a council response only if it passes evidence screening and
+exceeds a screened solo baseline's proxy score, or if the solo response fails
+the gate. If both fail, retain **no** lead. A tied score favors solo to avoid
+unproven added computational costs. This rule never changes the original
+experimental outcome or asserts clinical value.
+
+Replayed actual-model transcripts are frozen as regression examples in
+`tests/test_comparison.py`. Their existence must not be confused with
+independently labelled clinical evaluation.
+
 ## Scientific improvement is currently NOT demonstrated
 
 The gate uses an intentionally incomplete lexicon. It cannot establish
