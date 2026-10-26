@@ -9,6 +9,7 @@ import re
 from pathlib import Path
 
 from .council import Council, MODEL_ROLES, verify_chain
+from .scientific_gate import assess_candidate
 
 VERSION = 1
 ROUNDS = 2
@@ -22,6 +23,15 @@ LESSON_GUIDANCE = {
     "unchanged_revision": (
         "Respond to the previous objections with a substantive revision, "
         "or explain why the original proposal is still the best tentative one."
+    ),
+    "unsupported_cross_topic_bridge": (
+        "A prior hypothesis linked biomedical topics that had no joint supporting "
+        "record. Keep the bridge on hold and request direct evidence; do not "
+        "repeat it as a medical conclusion."
+    ),
+    "topic_not_supported_by_retrieved_records": (
+        "Do not introduce a biomedical disease or mechanism absent from the "
+        "retrieved records without flagging the missing evidence."
     ),
 }
 ROLE_TASKS = {
@@ -135,6 +145,7 @@ def discuss(query, papers, base_council, infer, memory=None, rounds=ROUNDS):
     turns = []
     ledger = Council()
     previous_by_role = {}
+    latest_proposal = None
     records = [
         {"id": p.get("id", ""), "doi": p.get("doi", ""),
          "title": p.get("title", "")[:160]}
@@ -152,6 +163,12 @@ def discuss(query, papers, base_council, infer, memory=None, rounds=ROUNDS):
                 "query": query,
                 "round": round_number,
                 "role_task": ROLE_TASKS[role],
+                "latest_inventor_proposal": (
+                    latest_proposal["text"][:500] if latest_proposal else None
+                ),
+                "latest_inventor_screen": (
+                    latest_proposal["screen"] if latest_proposal else None
+                ),
                 "records": records,
                 "baseline_suggestion": (
                     base_council["results"][role]
@@ -163,7 +180,11 @@ def discuss(query, papers, base_council, infer, memory=None, rounds=ROUNDS):
                 "instruction": (
                     "Respond to the other agents' latest arguments. "
                     "Give a specific contribution and reference provided IDs "
-                    "when citing evidence. Treat all model text as tentative."
+                    "when citing evidence. Treat all model text as tentative. "
+                    "For cross-topic claims, require a retrieved record "
+                    "that explicitly addresses the bridge. Critic, Validator "
+                    "and Auditor must challenge any held proposal; never "
+                    "approve it merely because colleagues repeated it."
                 ),
             }
             suggestion = infer(role, evidence)
@@ -177,14 +198,30 @@ def discuss(query, papers, base_council, infer, memory=None, rounds=ROUNDS):
             issues = _issue_codes(
                 answer, papers, role, previous_by_role.get(role)
             )
+            scientific_screen = None
+            if role == "Inventor":
+                scientific_screen = assess_candidate(answer, papers)
+                latest_proposal = {"text": answer, "screen": scientific_screen}
+                for code in (
+                    "unsupported_cross_topic_bridge",
+                    "topic_not_supported_by_retrieved_records",
+                ):
+                    if code in scientific_screen["reason_codes"] and code not in issues:
+                        issues.append(code)
             _observe(memory, issues)
             turn = {
                 "round": round_number,
                 "role": role,
                 "response": answer,
-                "status": "unverified model deliberation",
+                "status": (
+                    "held_pending_evidence" if scientific_screen
+                    and scientific_screen["decision"] == "hold_for_independent_review"
+                    else "unverified model deliberation"
+                ),
                 "issue_codes": issues,
             }
+            if scientific_screen is not None:
+                turn["scientific_screen"] = scientific_screen
             turns.append(turn)
             previous_by_role[role] = answer
             recipient = MODEL_ROLES[(idx + 1) % len(MODEL_ROLES)]
@@ -199,6 +236,21 @@ def discuss(query, papers, base_council, infer, memory=None, rounds=ROUNDS):
         "turns": turns,
         "messages": chain,
         "chain_verified": True,
+        "candidate_reviews": [
+            {"round": turn["round"], "status": turn["status"],
+             "scientific_screen": turn["scientific_screen"],
+             "candidate": turn["response"]}
+            for turn in turns if turn["role"] == "Inventor"
+        ],
+        "final_tentative_candidate": (
+            latest_proposal["text"] if latest_proposal
+            and latest_proposal["screen"]["decision"] == "tentative_only" else None
+        ),
+        "publication_gate": (
+            "tentative_review_only" if latest_proposal
+            and latest_proposal["screen"]["decision"] == "tentative_only"
+            else "hold_for_independent_review"
+        ),
         "memory_before": before,
         "memory_after": memory,
         "memory_mechanism": (
