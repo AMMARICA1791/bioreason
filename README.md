@@ -16,6 +16,8 @@ The goal is not to optimize biomedical citation-formatting tests. Biomedical exp
 | **Science-wide model council** (experimental) | [Real local-model role dialogue, one revision and source gate](.github/workflows/open-science-council.yml) | Model-run artifacts must be inspected before claiming an improved hypothesis |
 | **Biomedical regression laboratory** (retained) | [Europe PMC trials](.github/workflows/model-council.yml), [scientific quality regression cases](evaluation/scientific_regression_cases.json) | Historical positive and negative software tests; **not** the mission's domain limit |
 
+[Science-wide restart evidence and current limitations](research/OPEN_SCIENCE_RESTART_2026-10-26.md) records the latest actual model outcomes, including **no validated hypothesis** despite successful source retrieval and role executions.
+
 **The current four-field selection is a pilot, not a permanent science whitelist.**
 Reports clearly differentiate retrieving a paper, stating a testable hypothesis, verifying an experiment, and proving originality; none can substitute for another.
 
@@ -44,7 +46,7 @@ PYTHONPATH=src python -m bioreason 'example query' --input examples/papers.json
 PYTHONPATH=src python -m unittest discover -s tests -v
 ```
 
-The online command requires Europe PMC access. Offline fixtures and unit tests require no network. The repository currently has **100 offline tests**, including biomedical cross-topic regression tests, source/DOI checks, eight-role inference-adapter coverage, discussion chaining, and safe memory replay; GitHub Actions has executed the Python 3.10–3.13 test matrix successfully. Passing software tests does **not** establish scientific accuracy.
+The online command requires Europe PMC access. Offline fixtures and unit tests require no network. The repository currently has **116 offline tests**, including biomedical cross-topic regression tests, source/DOI checks, eight-role inference-adapter coverage, discussion chaining, and safe memory replay; GitHub Actions has executed the Python 3.10–3.13 test matrix successfully. Passing software tests does **not** establish scientific accuracy.
 
 Input: JSON array of objects with `title`, `id`, `source`, `doi`, optionally `year`. Output: JSON printed to stdout. Example records are synthetic.
 
