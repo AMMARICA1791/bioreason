@@ -121,6 +121,7 @@ class DeliberationTests(unittest.TestCase):
                 "diffuse_evidence_citations",
                 "critic_failed_to_challenge",
                 "unresolved_template_placeholders",
+                "doi_record_id_mismatch",
             })
 
     def test_incoherent_bridge_blocked_and_critic_informed(self):
