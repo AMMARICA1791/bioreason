@@ -36,6 +36,19 @@ def _topics(text):
     }
 
 
+_VALID_ABSTENTION = re.compile(
+    r"^\s*ABSTAIN\s*:\s*(?:insufficient (?:evidence|source support|supporting "
+    r"evidence)|missing evidence|no supporting record|not enough evidence)"
+    r"\.?\s*$",
+    re.IGNORECASE,
+)
+
+
+def is_valid_abstention(text):
+    """Only concise declarations of uncertainty qualify as clean abstentions."""
+    return isinstance(text, str) and bool(_VALID_ABSTENTION.fullmatch(text))
+
+
 def assess_candidate(candidate, records):
     """Return a blocking evidence gate, not a prediction of scientific truth.
 
@@ -46,6 +59,17 @@ def assess_candidate(candidate, records):
         raise TypeError("candidate must be text")
     if not isinstance(records, list):
         raise TypeError("records must be a list")
+    if is_valid_abstention(candidate):
+        return {
+            "decision": "abstained_insufficient_evidence",
+            "reason_codes": ["explicit_abstention_insufficient_evidence"],
+            "recognized_topics": [],
+            "topics_not_in_sources": [],
+            "record_ids_covering_all_topics": [],
+            "cited_record_ids": [],
+            "coverage": "explicit abstention; not a research claim",
+            "scientific_validation": False,
+        }
     topics = sorted(_topics(candidate))
     record_topics = {}
     for paper in records:
