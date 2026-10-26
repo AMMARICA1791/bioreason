@@ -22,7 +22,7 @@ class CouncilTests(unittest.TestCase):
     def test_hash_chain(self):
         output = run_council("protein folding", PAPERS)
         self.assertTrue(verify_chain(output["messages"]))
-        self.assertEqual(len(output["messages"]), 8)
+        self.assertEqual(len(output["messages"]), 9)
 
     def test_tamper_detection(self):
         output = run_council("protein folding", PAPERS)
