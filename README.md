@@ -33,7 +33,7 @@ PYTHONPATH=src python -m bioreason 'example query' --input examples/papers.json
 PYTHONPATH=src python -m unittest discover -s tests -v
 ```
 
-The online command requires Europe PMC access. Offline fixtures and unit tests require no network. Local tests: **5/5 passed in the packaging environment**; this is not evidence of scientific accuracy or of successful GitHub CI.
+The online command requires Europe PMC access. Offline fixtures and unit tests require no network. The repository defines **six offline unit tests**. A prior local prototype passed five tests; the published six-test suite has not yet been independently verified in GitHub Actions. Passing software tests would not establish scientific accuracy.
 
 Input: JSON array of objects with `title`, `id`, `source`, `doi`, optionally `year`. Output: JSON printed to stdout. Example records are synthetic.
 
