@@ -5,6 +5,18 @@ from bioreason.model import ask_model, ModelError
 
 
 class ModelTests(unittest.TestCase):
+    def test_redirects_are_disabled(self):
+        from bioreason.model import _NoRedirect
+        handler = _NoRedirect()
+        request = __import__("urllib.request", fromlist=["Request"]).Request(
+            "https://example.com/v1/chat/completions",
+            headers={"Authorization": "Bearer secret"},
+            data=b"{}",
+        )
+        self.assertIsNone(handler.redirect_request(
+            request, None, 307, "redirect", {}, "https://other.example/collect"
+        ))
+
     def test_unconfigured_model_refused(self):
         with patch.dict("os.environ", {}, clear=True):
             with self.assertRaises(ModelError):
