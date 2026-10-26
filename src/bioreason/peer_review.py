@@ -40,6 +40,10 @@ CHALLENGES = {
         "A proposed DOI is not in the supplied metadata. "
         "Remove it or find a verifiable source."
     ),
+    "doi_record_id_mismatch": (
+        "The DOI belongs to a different retrieved paper than the cited ID. "
+        "Identify which record supports the question and cite matching metadata."
+    ),
     "unassessed_biomedical_topics": (
         "The limited topic screen cannot classify this proposal. "
         "Narrow the idea to the evidence or request expert review."
@@ -53,6 +57,7 @@ SOURCE_CHALLENGES = frozenset({
     "missing_record_citation", "citation_does_not_support_topics",
     "unsupported_cross_topic_bridge", "topic_not_supported_by_retrieved_records",
     "diffuse_evidence_citations", "doi_not_in_retrieved_records",
+    "doi_record_id_mismatch",
 })
 
 CRITIQUE_SOURCE_WORDS = re.compile(
