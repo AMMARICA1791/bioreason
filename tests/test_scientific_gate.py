@@ -75,6 +75,26 @@ class ScientificGateTests(unittest.TestCase):
         self.assertIn("unassessed_biomedical_topics", result["reason_codes"])
         self.assertEqual(result["coverage"], "limited phrase-based screen, NOT a medical ontology")
 
+    def test_broad_catalogue_question_blocked_even_with_authentic_citation(self):
+        result = assess_candidate(
+            "What are some applications of AI in cervical cancer care? PMC13650561",
+            PAPERS,
+        )
+        self.assertEqual(result["decision"], "hold_for_independent_review")
+        self.assertIn("non_falsifiable_catalogue_question", result["reason_codes"])
+
+    def test_scattered_citation_list_is_not_focused_evidence(self):
+        papers = PAPERS + [
+            {"id": "PMC901", "title": "Cervical cancer classification"},
+            {"id": "PMC902", "title": "Cervical cancer models"},
+        ]
+        result = assess_candidate(
+            "Can cervical cancer diagnosis sensitivity improve? "
+            "PMC13650561 PMC13639773 PMC901 PMC902", papers
+        )
+        self.assertIn("diffuse_evidence_citations", result["reason_codes"])
+        self.assertEqual(result["decision"], "hold_for_independent_review")
+
     def test_inventor_must_ask_an_actual_research_question(self):
         result = assess_candidate(
             "Cervical cancer deep learning is important. PMC13650561", PAPERS
