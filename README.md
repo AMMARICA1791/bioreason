@@ -33,7 +33,7 @@ PYTHONPATH=src python -m bioreason 'example query' --input examples/papers.json
 PYTHONPATH=src python -m unittest discover -s tests -v
 ```
 
-The online command requires Europe PMC access. Offline fixtures and unit tests require no network. The repository currently has **58 offline tests**, including biomedical cross-topic regression tests, source/DOI checks, eight-role inference-adapter coverage, discussion chaining, and safe memory replay; GitHub Actions has executed the Python 3.10–3.13 test matrix successfully. Passing software tests does **not** establish scientific accuracy.
+The online command requires Europe PMC access. Offline fixtures and unit tests require no network. The repository currently has **66 offline tests**, including biomedical cross-topic regression tests, source/DOI checks, eight-role inference-adapter coverage, discussion chaining, and safe memory replay; GitHub Actions has executed the Python 3.10–3.13 test matrix successfully. Passing software tests does **not** establish scientific accuracy.
 
 Input: JSON array of objects with `title`, `id`, `source`, `doi`, optionally `year`. Output: JSON printed to stdout. Example records are synthetic.
 
@@ -93,6 +93,30 @@ silently inserted into the model's answer. The regression is tested.
 The first [actual Qwen solo-versus-council comparison](https://github.com/AMMARICA1791/bioreason/actions/runs/40316126789) found **no improvement**: a solo model response scored **one proxy point higher** than the final council proposal on the same literature; none of the three proposals cited a usable record ID, so all were held. The original metric mistakenly credited an uncited paper's mere presence in the bibliography. After fixing the metric to require an **actually cited supporting paper**, the comparison was **3/6 solo, 2/6 first council, 2/6 last council**. Both original and corrected interpretations are preserved in [RUN_EVIDENCE.md](RUN_EVIDENCE.md).
 
 The prior Critic objection was also dropped from the next Inventor's rolling context. The [handoff fix](src/bioreason/deliberation.py) explicitly delivers reviewer objections and gate reasons to the next Inventor turn, but a new real-model evaluation is required before claiming it improves answers.
+
+## Critic accountability and revision continuity
+
+A later actual [council trace](https://github.com/AMMARICA1791/bioreason/actions/runs/40316791405)
+found **no solo-to-council proxy advantage** (4/6 in each arm under the
+then-current score) and showed that Critic frequently rephrased Inventor's
+question without exposing the missing source citation. This does not qualify
+as a substantive peer challenge.
+
+[The correction](src/bioreason/peer_review.py) now generates an auditable,
+deterministic list of *specific* obligations from the independent proposal
+screen (e.g. absent source ID, unsupported disease bridge). Critic receives
+those challenges directly. Its answer is separately audited as either
+an explicit objection, a superficial review, or a case with no mandatory
+blocking criticism. Independently generated objections continue to reach
+Inventor even when Critic falls short. [The independent run evaluator](scripts/evaluate_run.py)
+reports Critic failures alongside the solo/council result.
+
+A compact focused paper excerpt and its **exact ID** are shown in both solo
+and council Inventor prompts, while revision additionally receives prior
+Critic objections and source failures. **The code never attaches citations
+automatically to a model's prose**, and scientific validation is not claimed.
+Software tests verify the handoffs; live-model improvement remains an
+experimental question.
 
 ## Evidence and provenance
 
