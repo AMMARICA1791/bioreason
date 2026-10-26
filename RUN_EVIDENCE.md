@@ -75,6 +75,17 @@ An abstention can be safer than a fabricated connection, but withholding two pro
 - **Engineering proof:** [Python tests 40314464085](https://github.com/AMMARICA1791/bioreason/actions/runs/40314464085) succeeded on Python 3.10–3.13 with **46 tests**. The ten existing synthetic scientific regression cases remain successful.
 - **Crucial limit:** real Qwen performance on the **new focused corpus** was not yet confirmed at the time these corrections were made. Passing tests and retrieving coherent records are not proof of scientific hypothesis quality.
 
+## Predeclared peer-critique versus solo control
+
+- **Protocol:** [EVALUATION_PROTOCOL.md](EVALUATION_PROTOCOL.md) documents the six-rule proxy rubric and negative-result rules **before** interpreting any solo-versus-council model run.
+- **Implementation:** `src/bioreason/comparison.py` records the actual text and identical mechanical screening of a solo Inventor response, first-round Inventor response, and final revised Inventor response using the same source bibliography and model. It explicitly discloses that inference budgets and contexts are unequal, so causal scientific improvement cannot be inferred.
+- **Integrity:** `scripts/evaluate_run.py` independently recomputes the saved comparison from the actual responses and verifies both hash-linked message traces. Manipulated output or fabricated model call counts fail.
+- **Root cause discovered from the earlier real council artifact:** `recent_dialogue_from_other_agents` included only four recent turns. The second-round Inventor consequently did **not** receive the prior-round Critic's objection because that turn had scrolled out of the window.
+- **Correction:** `src/bioreason/deliberation.py` now passes the **actual previous Critic objection**, Validator feedback, the scientific gate's specific blocking reasons, and a directly retrieved candidate record as `mandatory_revision_feedback` to Inventor. Records are for scrutiny; source IDs are not automatically appended, and unsupported proposals stay on hold.
+- **Engineering proof:** [run 40316840840](https://github.com/AMMARICA1791/bioreason/actions/runs/40316840840) passed **57** offline tests on Python 3.10–3.13, including direct Critic-to-Inventor transmission, refusal to launder missing citations, tampered-score checks, and honest negative comparisons. The ten synthetic regression cases also passed.
+
+**No scientific improvement is established by these tests.** A paired, actual-model run must separately report whether the revised council proposal improves on the solo answer and the first-round council answer.
+
 ## Earlier independent proof
 
 The preceding [run 40258295368](https://github.com/AMMARICA1791/bioreason/actions/runs/40258295368) proved live retrieval of 10 Europe PMC records and actual model output for Analyst, Inventor, and Critic before the eight-role extension.
